@@ -44,16 +44,16 @@ age_input = st.sidebar.slider('Max Age:', 17, 40, 25)
 pa_input = st.sidebar.slider('Min PA:', 10, 30, 10)
 # Create a page dropdown 
 page = st.sidebar.selectbox("Select level:", ["All", "AAA", "AA", "A+", "A"]) 
-if page == "Page 1":
-    # Display details of page 1
-elif page == "Page 2":
-    # Display details of page 2
-elif page == "Page 3":
-    # Display details of page 3
-elif page == "Page 4":
-    # Display details of page 3
-elif page == "Page ":
-    # Display details of page 3    
+if page == "All":
+    # Display details of All
+elif page == "AAA":
+    # Display details of AAA
+elif page == "AA":
+    # Display details of AA
+elif page == "A+":
+    # Display details of A+
+elif page == "A":
+    # Display details of A    
 
 # kpct_input = st.sidebar.slider('Max K%:', .40, .10, .25)
 # iso_input = st.sidebar.slider('Min ISO:', .000, .400, .200)

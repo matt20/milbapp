@@ -1,9 +1,13 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-#from PIL import Image
 from st_aggrid import AgGrid
 from st_aggrid.grid_options_builder import GridOptionsBuilder
+import seaborn as sns
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+
+
 
 st.set_page_config(page_title='MiLB Offensive Leaderboards', layout="wide")
 st.header('MiLB Offensive Leaderboards')
@@ -71,10 +75,10 @@ levels_choice = st.sidebar.multiselect(
 #have user select columns to filter data?
 cols =  ['Name/Org', 'Age', 'Level', 'PA', 'xPOPS', 'xSpect', 'K%', 'ISO', 'OPS', 'BB%',
         'BABIP', 'AVG', 'OBP', 'SLG', 'XBH', 'HR', 'SB', 'CS', 'eFB%',
-        'eGB%', 'eLD%']
+        'eGB%', 'eLD%', 'hmm']
 
-colsdefault =  ['Name/Org', 'Age', 'Level', 'PA', 'xPOPS', 'xSpect', 'K%', 'ISO', 'OPS', 'BB%',
-        'BABIP', 'AVG', 'OBP', 'SLG', 'XBH', 'HR', 'SB', 'CS']
+colsdefault =  ['Name/Org', 'Age', 'Level', 'hmm', 'PA', 'ISO', 'OPS', 'K%', 'BB%', 
+        'BABIP', 'AVG', 'OBP', 'SLG', 'XBH', 'HR', 'SB', 'CS','xPOPS', 'xSpect']
 
 # ['Name', 'Org', 'Age', 'Level', 'PA', 'wRC+', 'K%', 'ISO', 'SwStr%',
 #        'BB%', 'OPS', 'BABIP', 'AVG', 'OBP', 'SLG', 'HR/FB', 'HR', '2B', '3B',
@@ -86,7 +90,7 @@ orgs = ['ARI', 'ATL', 'BAL', 'BOS', 'CHC', 'CHW', 'CIN', 'CLE', 'COL', 'DET', 'H
 orgs_choice = st.sidebar.multiselect(
     "Organizations:", orgs, default=orgs)
 
-cols2 = ['Name/Org', 'Age', 'Level', 'PA', 'wRC+', 'K%', 'SwStr%', 'ISO', 
+cols2 = ['Name/Org', 'Age', 'Level', 'hmm', 'PA', 'wRC+', 'K%', 'SwStr%', 'ISO', 
          #'xPOPS', 'xSpect', 
         'OPS', 'BB%',
         'BABIP', 'AVG', 'OBP', 'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%',
@@ -96,33 +100,62 @@ cols_choice = st.sidebar.multiselect(
     "Categories:", cols, default=colsdefault)
 
 
+patot_input = st.sidebar.slider('Min PA (Totals):', 10, 70, 30)
 
-### --- LOAD DATAFRAMES
+#######################################################################
+#### ---- LOAD DATAFRAMES ---- ########################################
 dfrecent = pd.read_csv(r'C:/Users/mwpul/milbapp/milbrecent.csv', 
-                 index_col ='idlevel')
+                 index_col ='idlevelorg')
 
 dftotal = pd.read_csv(r'C:/Users/mwpul/milbapp/milbtoday.csv', 
-                 index_col ='idlevel')
+                 index_col ='idlevelorg')
 
 dfa = pd.read_csv(r'C:/Users/mwpul/milbapp/dfa.csv', 
-                 index_col ='idlevel')
+                 index_col ='idlevelorg')
 
-### --- FILTER DATAFRAMES BASED ON USER INPUT
+#######################################################################
+#######################################################################
+#### ---- FILTER DATAFRAMES BASED ON USER INPUT ---- ##################
 #dfrecent['Name/Org/Age/Lvl'] = dfrecent['Name'] + "-" + dfrecent['Org'] + "-" + dfrecent['Age'].astype(str) + "-" + dfrecent['Level']
 dfrecent['Name/Org'] = (dfrecent['Name'] + " - " + dfrecent['Org'])
 dfrecent['xPOPS'] = (dfrecent['xSpect']*dfrecent['OPS']).round(3)
+dfrecent['hmm'] = ((dfrecent['ISO']+dfrecent['BB%'])**((dfrecent['K%']**dfrecent['BABIP']))).round(3)
 dfrecent2 = dfrecent[(dfrecent['Age'] <= age_input)]
 dfrecent2 = dfrecent2[(dfrecent2['PA'] >= pa_input)]
 dfrecent2 = dfrecent2[dfrecent2['Level'].isin(levels_choice)]
 dfrecent2 = dfrecent2[dfrecent2['Org'].isin(orgs_choice)]
 dfrecent2 = dfrecent2.filter(cols_choice, axis=1)
 
+#######################################################################
+dftotal['Name/Org'] = (dftotal['Name'] + " - " + dftotal['Org'])
+dftotal = dftotal[dftotal['Org'].isin(orgs_choice)]
+dftotal['XBH'] = dftotal['2B'] + dftotal['3B'] + dftotal['HR']
+dftotal['hmm'] = ((dftotal['ISO']+dftotal['BB%'])**((dftotal['K%']**dftotal['BABIP']))).round(3)
+#dftotal['xSpect'] = dftotal['ISO']/(dftotal['K%']+dftotal['SwStr%'])
+#dftotal['xPOPS'] = (dftotal['xSpect']*dftotal['OPS']).round(3)
+dftotal2 = dftotal.filter(cols2, axis=1)
+dftotal2 = dftotal2[(dftotal2['Age'] <= age_input)]
+dftotal2 = dftotal2[(dftotal2['PA'] >= patot_input)]
+dftotal2 = dftotal2.round(3)
+dftotal2['wRC+'] = dftotal2['wRC+'].round(0)
+dftotal2 = dftotal2[dftotal2['Level'].isin(levels_choice)]
+#dftotal2.columns = cols2
+#######################################################################
+
 days = dfrecent['Days'].values[0]
 lastdate = dfrecent['Date'].values[0]
+#lastdatedate = datetime.strptime(lastdate, '%Y-%m-%d') #string to date
 
+#firstdatedate = lastdatedate - timedelta(days = days)
 
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#### --- THE FIRST DATA TABLE ----------------------------------- ####
 # utilize the datediff variable in the jupyter notebook to set the X in the subheader
-st.subheader("Stats from the last " + days.astype(str) + " days.")
+st.subheader("Last " + days.astype(str) + " days")#(" + firstdatedate.astype(str) +
+             #" through " + lastdatedate.astype(str))
 
 # configure grid options for Ag-Grid table
 gb = GridOptionsBuilder.from_dataframe(dfrecent2)
@@ -137,29 +170,82 @@ AgGrid(dfrecent2, gridOptions=gridOptions, enable_enterprise_modules=True, theme
 #st.dataframe(dfrecent2.describe())
 #AgGrid(dfrecent2.describe(), gridOptions=gridOptions, enable_enterprise_modules=True, theme = "blue") #fit_columns_on_grid_load=True))
 
+############################################################################
+############################################################################
+############################################################################
+############################################################################
+#### ---- WHERE I START MESSING AROUND WITH SEABORN VISUALIZATIONS ---- ####
+
+# def violinStrip_plot():
+#     st.header("Violin & Strip Plot")
+#     sd = st.selectbox(
+#         "Select a Plot", #Drop Down Menu Name
+#         [
+#             "Violin Plot", #First option in menu
+#             "Strip Plot"   #Seconf option in menu
+#         ]
+#     )
+
+#     fig = plt.figure(figsize=(12, 6))
+
+#     if sd == "Violin Plot":
+#         sns.violinplot(x = "age", y = "level", data = dfrecent2)
+    
+#     elif sd == "Strip Plot":
+#         sns.stripplot(x = "age", y = "level", data = dfrecent2)
+
+#     st.pyplot(fig)
+
+# if st.checkbox("Seaborn Plot",value=True):
+#     import seaborn as sns
+#     fig = sns.scatter(dfrecent2, dfrecent2.ISO, dfrecent2.BABIP, hue="Age") 
+#     st.pyplot(fig)
+
+
+if st.checkbox("Show graphs?", value = True):
+    import seaborn as sns
+    sns.set_theme(style="ticks")
+
+    # 
+    fig2 =sns.lmplot(x="hmm", y="wRC+", col="Level", hue="Level", data=dftotal2, 
+                     col_wrap=2, ci=None, palette="muted", #height=4,
+                     scatter_kws={"s": 50, "alpha": 1})
+    st.pyplot(fig2)
+    
+    sns.set_theme(style="darkgrid")
+    fig3 = sns.displot(dftotal, x="Age", col="Level",
+                   binwidth=1, height=3, facet_kws=dict(margin_titles=True))
+
+    st.pyplot(fig3)
+    
+
+
+
+# sns.set_theme(style="whitegrid")
+
+# # Draw a nested barplot by species and sex
+# g = sns.catplot(
+#     data=dftotal, kind="bar",
+#     x="Level", y="wRC+", hue="Age",
+#     ci="sd", palette="dark", alpha=.6, height=6
+# )
+# g.despine(left=True)
+# g.set_axis_labels("", "wRC+")
+# g.legend.set_title("")
+
+# st.pyplot(g)
+
+
+
+
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#### --- THE SECOND DATA TABLE ----------------------------------- ####
+
 # should make the subheader date dynamic
 st.subheader('Totals through ' + lastdate)
-patot_input = st.slider('Min PA:', 10, 70, 30)
-
-dftotal['Name/Org'] = (dftotal['Name'] + " - " + dftotal['Org'])
-dftotal = dftotal[dftotal['Org'].isin(orgs_choice)]
-dftotal['XBH'] = dftotal['2B'] + dftotal['3B'] + dftotal['HR']
-#dftotal['xSpect'] = dftotal['ISO']/(dftotal['K%']+dftotal['SwStr%'])
-#dftotal['xPOPS'] = (dftotal['xSpect']*dftotal['OPS']).round(3)
-dftotal2 = dftotal.filter(cols2, axis=1)
-dftotal2 = dftotal2[(dftotal2['Age'] <= age_input)]
-dftotal2 = dftotal2[(dftotal2['PA'] >= patot_input)]
-dftotal2 = dftotal2.round(3)
-# dftotal2 = dftotal2[(dftotal2['K%'] <= kpct_input)]
-# dftotal2 = dftotal2[(dftotal2['ISO'] >= iso_input)]
-# dftotal2 = dftotal2[(dftotal2['BB%'] >= bbpct_input)]
-# dftotal2 = dftotal2[(dftotal2['HR'] >= hr_input)]
-# dftotal2 = dftotal2[(dftotal2['SB'] >= sb_input)]
-# dftotal2 = dftotal2[(dftotal2['BABIP'] >= babip_input)]
-#dftotal2.columns = cols2
-dftotal2 = dftotal2[dftotal2['Level'].isin(levels_choice)]
-#dftotal2.columns = cols2
-
 
 # configure grid options for Ag-Grid table
 gb2 = GridOptionsBuilder.from_dataframe(dftotal2)
@@ -170,6 +256,11 @@ gb2.configure_default_column(min_column_width = 1, groupable=True, value=True, e
 gridOptions2 = gb2.build()
 
 AgGrid(dftotal2, gridOptions=gridOptions2, enable_enterprise_modules=True, theme='blue')
+
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
 
 # scatter = px.scatter(dftotal2, x=dftotal['K%'], y=dftotal.ISO, 
 #                      color=dftotal.Age, hover_name=dftotal.Name)

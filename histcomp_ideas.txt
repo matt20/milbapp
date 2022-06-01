@@ -1,0 +1,28 @@
+have to add 2022 rows to the dfhist3 dataframe (so need to perform the same slice operation on dfcurr and then merge those rows with the 2006-2021 rows to display in the table)
+-because what if a player is having a season no one else has ever had before.. except there's 5 guys having the same season now
+-maybe that tells us the game has changed, or that level is just playing differently due to talent/rules/etc. 
+-plus it's just good to have all the information. don't wanna tweet out saying James Wood is having a historically unique season only for someone to respond
+"Uh, so is Emmanuel Rodriguez then" 
+
+add in visualizations -- use the columns
+
+so maybe in the final product i have several pages
+
+an intro page
+-explaining the point of the project
+-explaining the data used and thanking Fangraphs
+-some basic EDA graphs (violin plot of age/level, etc.)
+
+histcomp_app
+-good tool for filtering the 2022 data and identifying prospects
+-
+
+
+time_split_app
+-do the same thing with the histcomp app but for time splits
+-as in, either you are sorting through the 2022 totals or time split (last 10, 15, 30, etc.)
+-you select a row and then it displays the remaining data for that player in the table below
+-if you're going through the Last 15 table, you can click on that player and the table below 
+will populate with that player's season totals (and maybe the L7, L30, etc.)
+-which players have made the biggest changes in leading indicators (i.e., FB%, LD%, ISO, etc.)
+    -so you select a time split and a category and then it displays a new table sorted by that category
