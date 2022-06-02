@@ -87,7 +87,7 @@ cols_curr = [
     'Name/Org', 'Age', 'Level', 'xSpect', 'PA', 'wRC+', 'ISO', 'K%',
     'SwStr%', 'BB%', 'hmm', 'xPOPS', 'OPS', 'BABIP', 'AVG', 'OBP', 
     'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%, 'Oppo%'
+    'Pull%', 'Cent%', 'Oppo%'
     ]
 
 cols_pct = [
