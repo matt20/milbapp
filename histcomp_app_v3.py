@@ -89,6 +89,14 @@ cols_curr = [
     'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%'
     ]
 
+cols_pct = [
+    'K%', 'SwStr%', 'BB%', 'HR/FB', 'FB%', 'GB%', 'LD%'
+]
+
+cols_slash = [
+    'ISO', 'BABIP', 'AVG', 'OBP', 'SLG',
+]
+
 #######################################################################
 #### --- TRANSFORM THE DATA  ------------------------------------ #####
 dfhist['xSpect'] = (dfhist['iso']/(dfhist['kpct']+dfhist['swstrpct'])).round(3)
