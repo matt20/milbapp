@@ -1,8 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from st_aggrid import AgGrid,GridUpdateMode
-from st_aggrid.grid_options_builder import GridOptionsBuilder
+from streamlit_aggrid import AgGrid,GridUpdateMode
+from streamlit_aggrid.grid_options_builder import GridOptionsBuilder
 from streamlit_option_menu import option_menu
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -239,3 +239,9 @@ AgGrid(dfhist3, gridOptions=gridOptions, enable_enterprise_modules=True, theme =
 #adding in some graphs and things of that nature
 ##################################################
 
+#fig = plt.figure(figsize=(10, 4))
+#sns.scatterplot(data = df, x = "Economy (GDP per Capita)", y = "Happiness Score")
+
+#st.pyplot(fig)
+
+sns.scatterplot(data = dfhist3)
