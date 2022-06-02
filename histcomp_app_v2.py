@@ -16,9 +16,17 @@ st.write('Use the sliders on the sidebar to filter 2022 Minor League Baseball st
 
 #######################################################################
 #### ---- LOAD DATAFRAMES ---- ########################################
-dfhist = pd.read_csv(r'C:/Users/mwpul/milbapp/milb0621off_70pa.csv', index_col ='playeriduniquecount')
+URL1 = 'https://github.com/matt20/milbapp/blob/master/milb0621off_70pa.csv?raw=true'
+dfhist = pd.read_csv(URL1,index_col = 'playeriduniquecount')
 
-dfcurr = pd.read_csv(r'C:/Users/mwpul/milbapp/milbtoday.csv', index_col ='idlevelorg')
+
+#dfhist = pd.read_csv(r'C:/Users/mwpul/milbapp/milb0621off_70pa.csv', index_col ='playeriduniquecount')
+
+
+URL2 = 'https://github.com/matt20/milbapp/blob/master/milbtoday.csv?raw=true'
+dfcurr = pd.read_csv(URL2, index_col = 'idlevelorg')
+
+#dfcurr = pd.read_csv(r'C:/Users/mwpul/milbapp/milbtoday.csv', index_col ='idlevelorg')
 
 #have user select parameters to filter data
 # enable_selection=st.sidebar.checkbox("Enable row selection", value=True)
