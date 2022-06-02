@@ -8,32 +8,21 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from pandas.api.types import CategoricalDtype
 
-#### SET UP THE ACTUAL PAGE ###########################################
+#######################################################################
+#### ---- LOAD DATAFRAMES ---- ########################################
+URL1 = 'https://github.com/matt20/milbapp/blob/master/milb0621off_70pa.csv?raw=true'
+dfhist = pd.read_csv(URL1,index_col = 'playeriduniquecount')
+
+URL2 = 'https://github.com/matt20/milbapp/blob/master/milbtoday.csv?raw=true'
+dfcurr = pd.read_csv(URL2, index_col = 'idlevelorg')
+#######################################################################
+
 st.set_page_config(
     page_title='MiLB Historical Comparison Tool', 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-#######################################################################
-#### ---- LOAD DATAFRAMES ---- ########################################
-@st.cache(allow_output_mutation=True)
-def load_dfhist():
-    URL1 = 'https://github.com/matt20/milbapp/blob/master/milb0621off_70pa.csv?raw=true'
-    data1 = pd.read_csv(URL1,index_col = 'playeriduniquecount')
-    return data1
-
-dfhist = load_dfhist()
-
-@st.cache(allow_output_mutation=True)
-def load_dfcurr():
-    URL2 = 'https://github.com/matt20/milbapp/blob/master/milbtoday.csv?raw=true'
-    data2 = pd.read_csv(URL2, index_col = 'idlevelorg')
-    return data2
-
-dfcurr = load_dfcurr()
-
-#######################################################################
 
 st.header('MiLB Historical Offensive Comparison Tool')
 st.write('Use the sliders on the sidebar to filter 2022 Minor League Baseball statistics (updated as of yesterday, courtesy of FanGraphs.com)')
@@ -50,9 +39,6 @@ input_buffer_kpct = st.sidebar.slider('K% Buffer:', .0, .100, .0)
 input_buffer_bbpct = st.sidebar.slider('BB% Buffer:', .0, .100, .0)
 input_pa_hist = st.sidebar.slider('Min PA (Hist):', 100, 400, 100)
 
-levels = dfhist['level'].unique()
-input_levels = st.sidebar.multiselect(
-    "Levels:", levels, default=levels)
 
 #### ADD SOME VARIABLES #################################################
 dfhist['level_code'] = dfhist['level'].map({
@@ -68,16 +54,20 @@ dfhist['level_code'] = dfhist['level'].map({
 
 dfhist['Name/Org'] = dfhist['name'] + dfhist['team']
 
+levels = dfhist['level'].unique()
+input_levels = st.sidebar.multiselect(
+    "Levels:", levels, default=levels)
+
 #### COLUMNS #############################################################
 cols_hist = [
-    'Name/Org/Year', 'age', 'level', 'pa', 'wrcplus', 'iso', 'kpct', 
+    'Name/Org', 'age', 'level', 'season', 'pa', 'wrcplus', 'iso', 'kpct', 
     'swstrpct', 'bbpct', 'xSpect', 'OPS', 'babip', 'avg', 'obp', 'slg',
     'hr', 'hrperfb', 'sb', 'cs', 'fbpct', 'ldpct', 'gbpct', 'pullpct',
     'centpct', 'oppopct', 'level_code'
     ]
 
 cols_hist_display = [
-    'Name/Org/Year', 'Age', 'Level', 'PA', 'wRC+', 'ISO', 'K%',
+    'Name/Org', 'Age', 'Level', 'Season', 'PA', 'wRC+', 'ISO', 'K%',
     'SwStr%', 'BB%', 'xSpect', 'OPS', 'BABIP', 'AVG', 'OBP', 'SLG', 
     'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'LD%', 'GB%', 'Pull%', 'Cent%',
     'Oppo%', 'level_code'
@@ -86,23 +76,14 @@ cols_hist_display = [
 cols_curr = [
     'Name/Org', 'Age', 'Level', 'xSpect', 'PA', 'wRC+', 'ISO', 'K%',
     'SwStr%', 'BB%', 'hmm', 'xPOPS', 'OPS', 'BABIP', 'AVG', 'OBP', 
-    'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%, 'Oppo%'
+    'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%'
     ]
-
-cols_pct = [
-    'K%', 'SwStr%', 'BB%', 'HR/FB', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%', 'Oppo%'
-]
-
-cols_slash = [
-    'ISO', 'BABIP', 'AVG', 'OBP', 'SLG'
-]
 
 #######################################################################
 #### --- TRANSFORM THE DATA  ------------------------------------ #####
+
 dfhist['xSpect'] = (dfhist['iso']/(dfhist['kpct']+dfhist['swstrpct'])).round(3)
-dfhist['Name/Org/Year'] = dfhist['name'] + ' - ' + dfhist['team'] + ' - ' + (dfhist['season']).astype(str)
+dfhist['Name/Org'] = dfhist['name'] + ' - ' + dfhist['team']
 dfhist['OPS'] = (dfhist['obp'] + dfhist['slg']).round(3)
 dfhist = dfhist[cols_hist]
 dfhist = dfhist[(dfhist['age'] <= input_age)]
@@ -118,6 +99,7 @@ dfhist2.sort_values(by='wRC+', ascending=False)
 #######################################################################
 #######################################################################
 dfcurr['Name/Org'] = (dfcurr['Name'] + " - " + dfcurr['Org'])
+
 dfcurr['XBH'] = dfcurr['2B'] + dfcurr['3B'] + dfcurr['HR']
 dfcurr['idk'] = ((2*dfcurr['ISO'])+(dfcurr['BB%']/2))**(((3*dfcurr['K%'])+dfcurr['SwStr%'])**dfcurr['BABIP']).round(3)
 dfcurr['xSpect'] = (dfcurr['ISO']/(dfcurr['K%']+dfcurr['SwStr%'])).round(3)
@@ -137,9 +119,11 @@ dfcurr2 = dfcurr2.sort_values(by='wRC+', ascending=False)
 #dfcurr2.columns = cols_curr
 #######################################################################
 
+
+
 # utilize the datediff variable in the jupyter notebook to set the X in the subheader
 st.write('Select a row from the 2022 stats to see all MiLB seasons with a higher ISO and walk rate, and lower strikeout rate since 2006 in the second table')
-st.caption('For the purposes of this app, season is defined as a stint with one Minor League team with at least 70 PA')
+st.caption('For the purposes of this app, season is defined as a stint with one Minor League team one team with at least 70 PA')
 
 #######################################################################
 #### --- THE FIRST DATA TABLE ----------------------------------- #####
@@ -155,6 +139,7 @@ grid_table = AgGrid(dfcurr2, gridOptions=gridoptions1,
                     allow_unsafe_jscode=True,
                     enable_enterprise_modules = True,
                     theme='blue')
+
 
 #### SETTING UP THE SELECTION ###########################################
 sel_row = grid_table["selected_rows"]
@@ -180,6 +165,8 @@ if sel_row != "":
     #sel_buff_age = sel_age + 1
     #sel_buff_level = sel_level + 1
     #sel_buff_swstrpct = sel_swstrpct - input_buffer_other 
+#################################################
+#FILTER THE HIST DATA ON THE NEW SELECTED JAWNS
 
 ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
 ## THIS WORKS WITHOUT THE BUFFERS #####################################
@@ -188,13 +175,14 @@ if sel_row != "":
 
 ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
 ## WITH BUFFERS #######################################################
+
 dfhist3 = dfhist2[
     (dfhist2['ISO'] >= sel_buff_iso) &
     (dfhist2['K%'] <= sel_buff_kpct) &
     (dfhist2['BB%'] >= sel_buff_bbpct) &
     (dfhist2['Age'] <= sel_age)
     ]
-          
+                  
 dfhist3 = dfhist3.sort_values(by='level_code', ascending=False)
 
 # CONFIGURE GRID OPTIONS ###############################################
@@ -205,8 +193,6 @@ gb.configure_default_column(min_column_width = .1, groupable=True, value=True, e
 gridoptions2 = gb.build()
 
 AgGrid(dfhist3, gridOptions=gridoptions2, enable_enterprise_modules=True, theme = "blue")
-
-
 # agree_hist = st.checkbox('Show historical data')
 
 # if agree_hist:
