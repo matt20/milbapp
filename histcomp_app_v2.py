@@ -53,9 +53,9 @@ input_kpct = st.sidebar.slider('Max K%:', .0, .400, .300)
 input_iso = st.sidebar.slider('Min ISO:', .0, .400, .150)
 input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .05)
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
-input_buffer_iso = st.sidebar.slider('ISO Buffer:', .0, .100, .025)
-input_buffer_kpct = st.sidebar.slider('K% Buffer:', .0, .100, .025)
-input_buffer_bbpct = st.sidebar.slider('BB% Buffer:', .0, .100, .025)
+input_buffer_iso = st.sidebar.slider('ISO Buffer:', .0, .100, .0)
+input_buffer_kpct = st.sidebar.slider('K% Buffer:', .0, .100, .0)
+input_buffer_bbpct = st.sidebar.slider('BB% Buffer:', .0, .100, .0)
 input_pa_hist = st.sidebar.slider('Min PA (Hist):', 100, 400, 100)
 
 
