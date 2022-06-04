@@ -33,6 +33,14 @@ def load_dfcurr():
 
 dfcurr = load_dfcurr()
 
+@st.cache(allow_output_mutation=True)
+def load_dfrecent():
+    URL3 = 'https://github.com/matt20/milbapp/blob/master/milbrecent.csv?raw=true'
+    data3 = pd.read_csv(URL3, index_col = 'idlevelorg')
+    return data3
+
+dfrecent = load_dfrecent()
+
 #######################################################################
 
 st.header('MiLB Historical Offensive Comparison Tool')
@@ -67,6 +75,7 @@ dfhist['level_code'] = dfhist['level'].map({
 })
 
 dfhist['Name/Org'] = dfhist['name'] + dfhist['team']
+dfcurr['id'] = dfcurr.index
 
 #### COLUMNS #############################################################
 cols_hist = [
@@ -84,10 +93,10 @@ cols_hist_display = [
     ]
 
 cols_curr = [
-    'Name/Org', 'Age', 'Level', 'xSpect', 'PA', 'wRC+', 'ISO', 'K%',
-    'SwStr%', 'BB%', 'hmm', 'xPOPS', 'OPS', 'BABIP', 'AVG', 'OBP', 
+    'Name/Org', 'Age', 'Level', 'PA', 'wRC+', 'ISO', 'K%',
+    'SwStr%', 'BB%', 'xSpect', 'OPS', 'BABIP', 'AVG', 'OBP', 
     'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%', 'Oppo%'
+    'Pull%', 'Cent%', 'Oppo%', 'hmm', 'xPOPS', 'id'
     ]
 
 cols_pct = [
@@ -161,10 +170,9 @@ sel_row = grid_table["selected_rows"]
 
 if sel_row != "":
     #st.write(sel_row)
-
     df_sel = pd.DataFrame(sel_row)
     st.subheader("Selected player: " + df_sel['Name/Org'].iloc[0])
-    st.table(df_sel)
+    #st.table(df_sel)
 
     sel_iso = df_sel['ISO'].iloc[0]
     sel_kpct = df_sel['K%'].iloc[0]
@@ -179,7 +187,13 @@ if sel_row != "":
     sel_buff_bbpct = (sel_bbpct - input_buffer_bbpct).round(3)
     #sel_buff_age = sel_age + 1
     #sel_buff_level = sel_level + 1
-    #sel_buff_swstrpct = sel_swstrpct - input_buffer_other 
+    #sel_buff_swstrpct = sel_swstrpct - input_buffer_other
+    #sel_days = df_sel['Days'].iloc[0]
+    #st.subheader("Last " + sel_days + " days")
+    sel_id = df_sel.id[0]
+    df_sel_recent = dfrecent.loc[[sel_id]]
+    st.table(df_sel_recent)
+
 
 ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
 ## THIS WORKS WITHOUT THE BUFFERS #####################################
@@ -193,18 +207,27 @@ dfhist3 = dfhist2[
     (dfhist2['K%'] <= sel_buff_kpct) &
     (dfhist2['BB%'] >= sel_buff_bbpct) &
     (dfhist2['Age'] <= sel_age)
-    ]
+]
           
 dfhist3 = dfhist3.sort_values(by='level_code', ascending=False)
 
 # CONFIGURE GRID OPTIONS ###############################################
 gb = GridOptionsBuilder.from_dataframe(dfhist3)
-gd.configure_pagination(enabled=True)
+gb.configure_pagination(enabled=True)
 gb.configure_side_bar()
+
 gb.configure_default_column(min_column_width = .1, groupable=True, value=True, enableRowGroup=True, aggFunc="mean", editable=True)
 gridoptions2 = gb.build()
 
-AgGrid(dfhist3, gridOptions=gridoptions2, enable_enterprise_modules=True, theme = "blue")
+AgGrid(
+    dfhist3,
+    gridOptions=gridoptions2,
+    height=530,
+    enable_enterprise_modules=True,
+    fit_columns_on_grid_load=True,
+    theme = "blue"
+)
+
 
 
 # agree_hist = st.checkbox('Show historical data')
