@@ -34,17 +34,33 @@ def load_dfcurr():
 dfcurr = load_dfcurr()
 
 @st.cache(allow_output_mutation=True)
-def load_dfrecent():
+def load_df_recent():
     URL3 = 'https://github.com/matt20/milbapp/blob/master/milbrecent.csv?raw=true'
     data3 = pd.read_csv(URL3, index_col = 'idlevelorg')
     return data3
 
-dfrecent = load_dfrecent()
+df_recent = load_df_recent()
+
+@st.cache(allow_output_mutation=True)
+def load_dfL7():
+    URL7 = 'https://github.com/matt20/milbapp/blob/master/milb_l7.csv?raw=true'
+    data7 = pd.read_csv(URL7, index_col = 'idlevelorg')
+    return data7
+
+df_L7 = load_dfL7()
+
+@st.cache(allow_output_mutation=True)
+def load_dfL14():
+    URL14 = 'https://github.com/matt20/milbapp/blob/master/milb_l14.csv?raw=true'
+    data14 = pd.read_csv(URL14, index_col = 'idlevelorg')
+    return data14
+
+df_L14 = load_dfL14()
 
 #######################################################################
 
-st.header('MiLB Historical Offensive Comparison Tool')
-st.write('Use the sliders on the sidebar to filter 2022 Minor League Baseball statistics (updated as of yesterday, courtesy of FanGraphs.com)')
+#st.header('MiLB Historical Offensive Comparison Tool')
+#st.write('Use the sliders on the sidebar to filter 2022 Minor League Baseball statistics (updated as of yesterday, courtesy of FanGraphs.com)')
 
 #### SIDEBAR ###########################################################
 input_age = st.sidebar.slider('Max Age:', 16, 32, 20)
@@ -76,6 +92,9 @@ dfhist['level_code'] = dfhist['level'].map({
 
 dfhist['Name/Org'] = dfhist['name'] + dfhist['team']
 dfcurr['id'] = dfcurr.index
+df_L7['id'] = df_L7.index
+df_L14['id'] = df_L14.index
+df_recent['id'] = df_recent.index
 
 #### COLUMNS #############################################################
 cols_hist = [
@@ -98,6 +117,14 @@ cols_curr = [
     'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
     'Pull%', 'Cent%', 'Oppo%', 'hmm', 'xPOPS', 'id'
     ]
+
+cols_time = [
+    'Name/Org', 'Age', 'Level', 'PA', 'wRC+', 'ISO', 'K%',
+    'SwStr%', 'BB%', 'xSpect', 'OPS', 'BABIP', 'AVG', 'OBP', 
+    'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
+    'Pull%', 'Cent%', 'Oppo%', 'hmm', 'xPOPS', 'id', 'Days'
+    ]
+
 
 cols_pct = [
     'K%', 'SwStr%', 'BB%', 'HR/FB', 'FB%', 'GB%', 'LD%',
@@ -143,12 +170,60 @@ dfcurr2 = dfcurr2.sort_values(by='wRC+', ascending=False)
 #dfcurr['xPOPS'] = (dfcurr['xSpect']*dfcurr['OPS']).round(3)
 #dfcurr = dfcurr[dfcurr['Org'].isin(orgs_choice)]
 #dfcurr2 = dfcurr2[dfcurr2['Level'].isin(input_levels)]
-#dfcurr2.columns = cols_curr
+#######################################################################
+#######################################################################
+df_L7['Name/Org'] = (df_L7['Name'] + " - " + df_L7['Org'])
+df_L7['idk'] = ((2*df_L7['ISO'])+(df_L7['BB%']/2))**(((3*df_L7['K%'])*2)**df_L7['BABIP']).round(3)
+df_L7['xSpect'] = (df_L7['ISO']/(df_L7['K%']*2)).round(3)
+df_L7 = df_L7.filter(cols_time, axis=1)
+#df_L7 = df_L7[(df_L7['Age'] <= input_age)]
+#df_L7 = df_L7[(df_L7['PA'] >= input_pa_curr)]
+df_L7 = df_L7.round(3)
+# df_L7 = df_L7[(df_L7['ISO'] >= input_iso) &
+#                  (df_L7['K%'] <= input_kpct) &
+#                  (df_L7['BB%'] >= input_bbpct)]
+#df_L7 = df_L7.sort_values(by='OPS', ascending=False)
+#df_L7['xPOPS'] = (df_L7['xSpect']*df_L7['OPS']).round(3)
+#df_L7 = df_L7[df_L7['Org'].isin(orgs_choice)]
+#df_L7 = df_L7[df_L7['Level'].isin(input_levels)]
+#######################################################################
+#######################################################################
+df_L14['Name/Org'] = (df_L14['Name'] + " - " + df_L14['Org'])
+df_L14['idk'] = ((2*df_L14['ISO'])+(df_L14['BB%']/2))**(((3*df_L14['K%'])*2)**df_L14['BABIP']).round(3)
+df_L14['xSpect'] = (df_L14['ISO']/(df_L14['K%']*2)).round(3)
+df_L14 = df_L14.filter(cols_time, axis=1)
+#df_L14 = df_L14[(df_L14['Age'] <= input_age)]
+#df_L14 = df_L14[(df_L14['PA'] >= input_pa_curr)]
+df_L14 = df_L14.round(3)
+# df_L14 = df_L14[(df_L14['ISO'] >= input_iso) &
+#                  (df_L14['K%'] <= input_kpct) &
+#                  (df_L14['BB%'] >= input_bbpct)]
+#df_L14 = df_L14.sort_values(by='OPS', ascending=False)
+#df_L14['xPOPS'] = (df_L14['xSpect']*df_L14['OPS']).round(3)
+#df_L14 = df_L14[df_L14['Org'].isin(orgs_choice)]
+#df_L14 = df_L14[df_L14['Level'].isin(input_levels)]
+#######################################################################
+#######################################################################
+df_recent['Name/Org'] = (df_recent['Name'] + " - " + df_recent['Org'])
+df_recent['idk'] = ((2*df_recent['ISO'])+(df_recent['BB%']/2))**(((3*df_recent['K%'])*2)**df_recent['BABIP']).round(3)
+df_recent['xSpect'] = (df_recent['ISO']/(df_recent['K%']*2)).round(3)
+df_recent = df_recent.filter(cols_time, axis=1)
+#df_recent = df_recent[(df_recent['Age'] <= input_age)]
+#df_recent = df_recent[(df_recent['PA'] >= input_pa_curr)]
+df_recent = df_recent.round(3)
+# df_recent = df_recent[(df_recent['ISO'] >= input_iso) &
+#                  (df_recent['K%'] <= input_kpct) &
+#                  (df_recent['BB%'] >= input_bbpct)]
+#df_recent = df_recent.sort_values(by='OPS', ascending=False)
+#df_recent['xPOPS'] = (df_recent['xSpect']*df_recent['OPS']).round(3)
+#df_recent = df_recent[df_recent['Org'].isin(orgs_choice)]
+#df_recent = df_recent[df_recent['Level'].isin(input_levels)]
 #######################################################################
 
+
 # utilize the datediff variable in the jupyter notebook to set the X in the subheader
-st.write('Select a row from the 2022 stats to see all MiLB seasons with a higher ISO and walk rate, and lower strikeout rate since 2006 in the second table')
-st.caption('For the purposes of this app, season is defined as a stint with one Minor League team with at least 70 PA')
+#st.write('Select a row from the 2022 stats to see all MiLB seasons with a higher ISO and walk rate, and lower strikeout rate since 2006 in the second table')
+#st.caption('For the purposes of this app, season is defined as a stint with one Minor League team with at least 70 PA')
 
 #######################################################################
 #### --- THE FIRST DATA TABLE ----------------------------------- #####
@@ -171,7 +246,7 @@ sel_row = grid_table["selected_rows"]
 if sel_row != "":
     #st.write(sel_row)
     df_sel = pd.DataFrame(sel_row)
-    st.subheader("Selected player: " + df_sel['Name/Org'].iloc[0])
+    st.subheader("Selected player: " + df_sel['Name/Org'].iloc[0] + ' | Level: ' + df_sel['Level'].iloc[0])
     #st.table(df_sel)
 
     sel_iso = df_sel['ISO'].iloc[0]
@@ -190,9 +265,93 @@ if sel_row != "":
     #sel_buff_swstrpct = sel_swstrpct - input_buffer_other
     #sel_days = df_sel['Days'].iloc[0]
     #st.subheader("Last " + sel_days + " days")
+    # sel_id = df_sel.id[0]
+    # df_sel_recent = df_recent.loc[[sel_id]]
+    # df_sel_L7 = df_L7.loc[[sel_id]]
+    # df_sel_L7['Days'] = df_L7.Days[0]
+    # df_sel_L7.set_index('Days', inplace=True)
+    # df_sel_L14 = df_L14.loc[[sel_id]]
+    # df_sel_L14['Days'] = df_L14.Days[0]
+    # df_sel_L14.set_index('Days', inplace=True)
+    # df_sel_recent['Days'] = df_recent.Days[0]
+    # df_sel_recent.set_index('Days', inplace=True)
+    # #df_sel_curr = dfcurr2.loc[[sel_id]]
+    # frames = [df_sel_L7, df_sel_L14, df_sel_recent]
+    # result = pd.concat(frames)
+    # st.write('Last 7')
+    # st.table(df_sel_L7)
+    # st.write('Last 14')
+    # st.table(df_sel_L14)
+    # st.write('Last ' + str(df_recent.Days[0]))
+    #st.table(result)
+    
+    # st.write('Level Total')
+    # st.table(df_sel_curr)
+
+
     sel_id = df_sel.id[0]
-    df_sel_recent = dfrecent.loc[[sel_id]]
-    st.table(df_sel_recent)
+
+l7idx = df_L7.index.values.tolist()
+l14idx = df_L14.index.values.tolist()
+recentidx = df_recent.index.values.tolist()
+allidx = l7idx + l14idx + recentidx
+
+
+if sel_id in df_L7.index.values:
+    df_sel_L7 = df_L7.loc[[sel_id]]
+    df_sel_L7['Days'] = df_L7['Days'][0]
+    df_sel_L7['Days'] = 'Last ' + df_sel_L7['Days'].astype(str)
+    df_sel_L7.set_index('Days', inplace=True)
+else: 
+    df_sel_L7 = pd.DataFrame({}, columns=df_L7.columns, index = ['Days'])
+
+if sel_id in df_L14.index.values:
+    df_sel_L14 = df_L14.loc[[sel_id]]
+    df_sel_L14['Days'] = df_L14['Days'][0]
+    df_sel_L14['Days'] = 'Last ' + df_sel_L14['Days'].astype(str)
+    df_sel_L14.set_index('Days', inplace=True)
+else:
+    df_sel_L14 = pd.DataFrame({}, columns=df_L14.columns, index = ['Days'])
+
+if sel_id in df_recent.index.values:
+    df_sel_recent = df_recent.loc[[sel_id]]
+    df_sel_recent['Days'] = df_recent['Days'][0]
+    df_sel_recent['Days'] = 'Last ' + df_sel_recent['Days'].astype(str)
+    df_sel_recent.set_index('Days', inplace=True)
+else:
+    df_sel_recent = pd.DataFrame({}, columns=df_recent.columns, index = ['Days'])
+
+if sel_id in allidx:
+    frames = [
+        df_sel_L7,
+        df_sel_L14,
+        df_sel_recent
+        ]
+    result = pd.concat(frames)
+    result2 = result.drop(columns=['Name/Org', 'Age', 'Level', 'id'])
+    result2['Split'] = result2.index
+    # shift column 'Name' to first position
+    first_column = result2.pop('Split')
+    
+    # insert column using insert(position,column_name,
+    # first_column) function
+    result2.insert(0, 'Split', first_column)
+    # CONFIGURE GRID OPTIONS ###############################################
+    gb2 = GridOptionsBuilder.from_dataframe(result2)
+    gb2.configure_default_column(min_column_width = .1)
+    gridoptions3 = gb2.build()
+
+    AgGrid(
+        result2,
+        gridOptions=gridoptions3,
+        height=100,
+        enable_enterprise_modules=True,
+        theme = "blue"
+    )
+
+else:
+    st.write('This player has not played during this period')
+    
 
 
 ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
@@ -224,7 +383,6 @@ AgGrid(
     gridOptions=gridoptions2,
     height=530,
     enable_enterprise_modules=True,
-    fit_columns_on_grid_load=True,
     theme = "blue"
 )
 
