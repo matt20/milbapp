@@ -28,7 +28,7 @@ dfhist = load_dfhist()
 @st.cache(allow_output_mutation=True)
 def load_dfraw():
     URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
-    data2 = pd.read_csv(URL2, index_col = 'playeridunique')
+    data2 = pd.read_csv(URL2, index_col = 'PlayerIDUnique')
     return data2
 
 dfraw = load_dfraw()
