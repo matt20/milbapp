@@ -58,7 +58,6 @@ dfhist['level_code'] = dfhist['level'].map({
 })
 
 dfhist['Name/Org'] = dfhist['name'] + dfhist['team']
-dfraw['id'] = dfraw.index
 
 #### COLUMNS #############################################################
 cols_hist = [
@@ -98,54 +97,56 @@ cols_slash = [
     'ISO', 'BABIP', 'AVG', 'OBP', 'SLG'
 ]
 
-#######################################################################
-#### --- TRANSFORM THE DATA  ------------------------------------ #####
-dfhist['xSpect'] = (dfhist['iso']/(dfhist['kpct']+dfhist['swstrpct'])).round(3)
-dfhist['Name/Org/Year'] = dfhist['name'] + ' - ' + dfhist['team'] + ' - ' + (dfhist['season']).astype(str)
-dfhist['OPS'] = (dfhist['obp'] + dfhist['slg']).round(3)
-dfhist = dfhist[cols_hist]
-dfhist = dfhist[(dfhist['age'] <= input_age)]
-dfhist = dfhist[(dfhist['pa'] >= input_pa_hist)]
-#dfhist = dfhist[dfhist['level'].isin(input_levels)]
-dfhist['wrcplus'] = dfhist['wrcplus'].round(0)
-dfhist2 = dfhist[(dfhist['iso'] >= input_iso) &
-                 (dfhist['kpct'] <= input_kpct) &
-                 (dfhist['bbpct'] >= input_bbpct) &
-                 (dfhist['wrcplus'] >= input_wrcplus)]
-dfhist2.columns = cols_hist_display
-dfhist2.sort_values(by='wRC+', ascending=False)
-#######################################################################
-#######################################################################
-dfraw['Name/Org'] = (dfraw['Name'] + " - " + dfraw['Org'])
-dfraw['XBH'] = dfraw['2B'] + dfraw['3B'] + dfraw['HR']
-dfraw['idk'] = ((2*dfraw['ISO'])+(dfraw['BB%']/2))**(((3*dfraw['K%'])+dfraw['SwStr%'])**dfraw['BABIP']).round(3)
-dfraw['xSpect'] = (dfraw['ISO']/(dfraw['K%']+dfraw['SwStr%'])).round(3)
-dfraw2 = dfraw.filter(cols_curr, axis=1)
-dfraw2 = dfraw2[(dfraw2['Age'] <= input_age)]
-dfraw2 = dfraw2[(dfraw2['PA'] >= input_pa_curr)]
-dfraw2 = dfraw2.round(3)
-dfraw2['wRC+'] = dfraw2['wRC+'].round(0)
-dfraw2 = dfraw2[(dfraw2['ISO'] >= input_iso) &
-                 (dfraw2['K%'] <= input_kpct) &
-                 (dfraw2['BB%'] >= input_bbpct) &
-                 (dfraw2['wRC+'] >= input_wrcplus)]
-dfraw2 = dfraw2.sort_values(by='wRC+', ascending=False)
-#######################################################################
+st.dataframe(dfraw)
 
-#######################################################################
-#### --- THE FIRST DATA TABLE ----------------------------------- #####
-# configure grid options for Ag-Grid table
-gd = GridOptionsBuilder.from_dataframe(dfraw2)
-gd.configure_pagination(enabled=True)
-gd.configure_default_column(editable=True, groupable=True)
-gd.configure_selection(selection_mode='single', use_checkbox=True, pre_selected_rows=[0])
-gridoptions1 = gd.build()
-grid_table = AgGrid(dfraw2, gridOptions=gridoptions1,
-                    update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-                    height=530,
-                    allow_unsafe_jscode=True,
-                    enable_enterprise_modules = True,
-                    theme='blue')
+# #######################################################################
+# #### --- TRANSFORM THE DATA  ------------------------------------ #####
+# dfhist['xSpect'] = (dfhist['iso']/(dfhist['kpct']+dfhist['swstrpct'])).round(3)
+# dfhist['Name/Org/Year'] = dfhist['name'] + ' - ' + dfhist['team'] + ' - ' + (dfhist['season']).astype(str)
+# dfhist['OPS'] = (dfhist['obp'] + dfhist['slg']).round(3)
+# dfhist = dfhist[cols_hist]
+# dfhist = dfhist[(dfhist['age'] <= input_age)]
+# dfhist = dfhist[(dfhist['pa'] >= input_pa_hist)]
+# #dfhist = dfhist[dfhist['level'].isin(input_levels)]
+# dfhist['wrcplus'] = dfhist['wrcplus'].round(0)
+# dfhist2 = dfhist[(dfhist['iso'] >= input_iso) &
+#                  (dfhist['kpct'] <= input_kpct) &
+#                  (dfhist['bbpct'] >= input_bbpct) &
+#                  (dfhist['wrcplus'] >= input_wrcplus)]
+# dfhist2.columns = cols_hist_display
+# dfhist2.sort_values(by='wRC+', ascending=False)
+# #######################################################################
+# #######################################################################
+# dfraw['Name/Org'] = (dfraw['Name'] + " - " + dfraw['Org'])
+# dfraw['XBH'] = dfraw['2B'] + dfraw['3B'] + dfraw['HR']
+# dfraw['idk'] = ((2*dfraw['ISO'])+(dfraw['BB%']/2))**(((3*dfraw['K%'])+dfraw['SwStr%'])**dfraw['BABIP']).round(3)
+# dfraw['xSpect'] = (dfraw['ISO']/(dfraw['K%']+dfraw['SwStr%'])).round(3)
+# dfraw2 = dfraw.filter(cols_curr, axis=1)
+# dfraw2 = dfraw2[(dfraw2['Age'] <= input_age)]
+# dfraw2 = dfraw2[(dfraw2['PA'] >= input_pa_curr)]
+# dfraw2 = dfraw2.round(3)
+# dfraw2['wRC+'] = dfraw2['wRC+'].round(0)
+# dfraw2 = dfraw2[(dfraw2['ISO'] >= input_iso) &
+#                  (dfraw2['K%'] <= input_kpct) &
+#                  (dfraw2['BB%'] >= input_bbpct) &
+#                  (dfraw2['wRC+'] >= input_wrcplus)]
+# dfraw2 = dfraw2.sort_values(by='wRC+', ascending=False)
+# #######################################################################
+
+# #######################################################################
+# #### --- THE FIRST DATA TABLE ----------------------------------- #####
+# # configure grid options for Ag-Grid table
+# gd = GridOptionsBuilder.from_dataframe(dfraw2)
+# gd.configure_pagination(enabled=True)
+# gd.configure_default_column(editable=True, groupable=True)
+# gd.configure_selection(selection_mode='single', use_checkbox=True, pre_selected_rows=[0])
+# gridoptions1 = gd.build()
+# grid_table = AgGrid(dfraw2, gridOptions=gridoptions1,
+#                     update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
+#                     height=530,
+#                     allow_unsafe_jscode=True,
+#                     enable_enterprise_modules = True,
+#                     theme='blue')
 
 # #### SETTING UP THE SELECTION ###########################################
 # sel_row = grid_table["selected_rows"]
