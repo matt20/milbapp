@@ -371,6 +371,7 @@ else:
         sel_row = grid_table["selected_rows"]
     else:
         st.caption('Last ' + days_back_var + ' days')
+        st.caption('Select a player to pull up their profile')
         #######################################################################
         #### --- THE FIRST DATA TABLE ----------------------------------- #####
         # configure grid options for Ag-Grid table
