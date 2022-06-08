@@ -18,41 +18,44 @@ st.set_page_config(
 
 ######################################################################################################
 #### ---- LOAD DATAFRAMES ---- #######################################################################
-@st.cache(allow_output_mutation=True)
-def load_df_hist():
-    URL1 = 'https://github.com/matt20/milbapp/blob/master/milb0621off_70pa.csv?raw=true'
-    data1 = pd.read_csv(URL1,index_col = 'playeriduniquecount')
-    return data1
+with st.spinner('Loading data...'):
+    @st.cache(allow_output_mutation=True)
+    def load_df_hist():
+        URL1 = 'https://github.com/matt20/milbapp/blob/master/milb0621off_70pa.csv?raw=true'
+        data1 = pd.read_csv(URL1,index_col = 'playeriduniquecount')
+        return data1
 
-df_hist = load_df_hist()
+    df_hist = load_df_hist()
 
-@st.cache(allow_output_mutation=True)
-def load_df_raw():
-    URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
-    data2 = pd.read_csv(URL2, index_col = 'IndexNew')
-    return data2
+    @st.cache(allow_output_mutation=True)
+    def load_df_raw():
+        URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
+        data2 = pd.read_csv(URL2, index_col = 'IndexNew')
+        return data2
 
-df_raw = load_df_raw()
+    df_raw = load_df_raw()
+    df_hist['PlayerID'] = df_hist.index
 
-#######################################################################################################
 
-#st.dataframe(df_raw)
+    #######################################################################################################
 
-df_raw['IndexSplit'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
-df_raw['IndexSplit2'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
+    #st.dataframe(df_raw)
 
-def get_df_filter(date):
-    return df_raw.loc[(df_raw['Date'].astype(str) == date)].copy()
+    df_raw['IndexSplit'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
+    df_raw['IndexSplit2'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
 
-dates = df_raw['Date'].unique()
-dates2 = sorted(dates, 
-                          key=lambda date: datetime.strptime(date, '%Y-%m-%d'), reverse=True)
-date_max = dates2[0]
+    def get_df_filter(date):
+        return df_raw.loc[(df_raw['Date'].astype(str) == date)].copy()
 
-df_raw['DaysBack'] = ((df_raw.apply(lambda row: datetime.strptime(date_max, '%Y-%m-%d') - datetime.strptime(row['Date'], '%Y-%m-%d'), axis = 1)).dt.days).astype(int)
+    dates = df_raw['Date'].unique()
+    dates2 = sorted(dates, 
+                            key=lambda date: datetime.strptime(date, '%Y-%m-%d'), reverse=True)
+    date_max = dates2[0]
 
-def get_df_filter_days(days):
-    return df_raw.loc[(df_raw['DaysBack'] == days)].copy()
+    df_raw['DaysBack'] = ((df_raw.apply(lambda row: datetime.strptime(date_max, '%Y-%m-%d') - datetime.strptime(row['Date'], '%Y-%m-%d'), axis = 1)).dt.days).astype(int)
+
+    def get_df_filter_days(days):
+        return df_raw.loc[(df_raw['DaysBack'] == days)].copy()
 
 ################################################################################################
 #### SET UP COLUMNS ############################################################################
@@ -75,10 +78,56 @@ cols_split_display = [
 
 cols_xyz = [
     'Name','Age','Level','PA',
-    'wRC+','ISO','K%','BB%',
+    'wRC+','ISO','K%','BB%','SwStr%',
     'OPS','BABIP','AVG','OBP','SLG',
-    'HR', '2B', '3B','SB','CS','IndexSplit2'
+    'HR', '2B', '3B','SB','CS',
+    'FB%', 'LD%', 'GB%', 'HR/FB',
+    'IndexSplit2'
 ]
+
+cols_hist_clean = [
+    'Name', 'Org', 'Level', 'Age', 'Season',
+    'PA', 'HR', 'SB', 'CS', 'ISO', 'SwStr%',
+    'K%','BB%','BABIP','AVG','OBP','SLG',
+    'wRC+','HR/FB','FB%','LD%','GB%','Pull%',
+    'Cent%','Oppo%','PlayerID'
+]
+
+cols_hist_num = [
+    'ISO', 'SwStr%',
+    'K%','BB%','BABIP','AVG','OBP','SLG',
+    'HR/FB','FB%','LD%','GB%','Pull%',
+    'Cent%','Oppo%',
+]
+
+
+cols_hist_display = [
+    'Name','Org','Season','Age','Level','PA',
+    'wRC+','ISO','K%','BB%','SwStr%',
+    'OPS','BABIP','AVG','OBP','SLG',
+    'HR','XBH','HR/FB','SB','CS','PlayerID'
+]
+
+cats_sel_display = [
+    'PA','wRC+','ISO','K%','BB%','SwStr%',
+    'OPS','BABIP','AVG','OBP','SLG',
+    'HR','XBH','SB','CS',
+    'FB%','LD%','GB%',
+    'PlayerID'
+]
+
+df_hist.columns = cols_hist_clean
+
+for col in cols_hist_num:
+    df_hist[col] = pd.to_numeric(df_hist[col], errors='coerce').round(3)
+
+df_hist['wRC+'] = df_hist['wRC+'].astype(int).round(0)
+df_raw['wRC+'] = df_raw['wRC+'].astype(int).round(0)
+
+
+df_hist_recent = df_hist[df_hist['Season'] > 2014]
+
+levels = df_raw['Level'].unique()
 
 ################################################################################################
 #### USER INPUT FOR DATES ######################################################################
@@ -106,9 +155,10 @@ df_date_6 = get_df_filter(date_6)
 date_12 = dates_choice_end[12]
 df_date_12 = get_df_filter(date_12)
 
-col1, col2, col3 = st.columns(3)
+
 
 ## COLUMNS AND SEARCH ############################################################################
+col1, col2, col3 = st.columns(3)
 
 with col1:
     date_start = st.selectbox(
@@ -168,6 +218,8 @@ def get_df_diff(dfEnd, dfStart):
 
 df_diff_input = get_df_diff(df_end, df_start)
 
+df_date_max_display = df_date_max.filter(cols_xyz, axis=1)
+#st.dataframe(df_date_max_display)
 ################################################################################################
 #### SETTING UP THE BIO DF TO MERGE BACK IN WITH THE SPLITS DATA ###############################
 
@@ -184,16 +236,18 @@ df_splits.sort_values(by=['PA'])
 # pa_mean = (df_splits['PA'].mean()).astype(int)
 
 splits_pa_max = int(df_splits['PA'].max())
-#splits_pa_max = splits_pa_max_0
-
 #### SIDEBAR ###########################################################
 input_age = st.sidebar.slider('Max Age:', 16, 32, 20)
 input_pa_min = st.sidebar.slider('Min PA (Splits):', 1, splits_pa_max, 1)
 input_pa_max = st.sidebar.slider('Max PA (Splits):', 50, splits_pa_max, splits_pa_max)
-input_kpct = st.sidebar.slider('Max K%:', .0, .400, .300)
-input_iso = st.sidebar.slider('Min ISO:', .0, .400, .150)
+input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
+input_iso = st.sidebar.slider('Min ISO:', .0, .400, .0)
 input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
+input_levels = st.sidebar.multiselect(
+     'Levels',
+     levels,
+     levels)
 # input_buffer_iso = st.sidebar.slider('ISO Buffer:', .0, .100, .0)
 # input_buffer_kpct = st.sidebar.slider('K% Buffer:', .0, .100, .0)
 # input_buffer_bbpct = st.sidebar.slider('BB% Buffer:', .0, .100, .0)
@@ -222,7 +276,8 @@ def filter_by_input(df):
                         (df['BB%'] >= input_bbpct) &
                         (df['Age'] <= input_age) &
                         (df['PA'] >= input_pa_min) &
-                        (df['PA'] <= input_pa_max)
+                        (df['PA'] <= input_pa_max) &
+                        (df['Level'].isin(input_levels))
     ]
 
 
@@ -235,6 +290,11 @@ df_splits_2 = df_splits_2.filter(cols_split_display, axis=1)
 
 # format_dict = {'K%': '{:.2%}', 'BB%': '{:.2%}'}
 # df_splits_2.style.format(format_dict)
+
+
+
+# st.dataframe(df_hist_recent)
+# st.write(df_hist.columns)
 
 st.write('Last ' + days_back_var + ' days')
 
@@ -252,6 +312,86 @@ grid_table = AgGrid(df_splits_2, gridOptions=gridoptions1,
                     allow_unsafe_jscode=True,
                     enable_enterprise_modules=True,
                     theme='blue')
+
+def get_time_graph(yvar, df, ymin, ymax):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter("PA", yvar, data = df)
+    ax.plot("PA", yvar, data = df)
+    ax.set_xlabel('PA')
+    ax.set_ylabel(yvar)
+    plt.ylim([ymin, ymax])
+    output = st.write(fig)
+    return output
+
+def get_time_graph_hrsb(df, ymin, ymax):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter("PA", "HR", data = df)
+    ax.plot("PA", "HR", data = df)
+    ax.scatter("PA", "SB", data = df)
+    ax.plot("PA", "SB", data = df)
+    ax.set_xlabel('PA')
+    ax.set_ylabel('HR (Blue) | SB (Orange)')
+    plt.ylim([ymin, ymax])
+    output = st.write(fig)
+    return output
+
+def get_time_graph_bbkswstr(df):
+    fig, ax = plt.subplots(figsize=(8, 5), label='Inline label')
+    ax.scatter("PA", "BB%", data = df)
+    ax.plot("PA", "BB%", data = df, label='_BB%')
+    ax.scatter("PA", "K%", data = df)
+    ax.plot("PA", "K%", data = df, label='_K%')
+    ax.scatter("PA", "ISO", data = df)
+    ax.plot("PA", "ISO", data = df, label='_ISO')
+    ax.scatter("PA", "SwStr%", data = df)
+    ax.plot("PA", "SwStr%", data = df, label='_SwStr%')
+    ax.set_xlabel('PA')
+    ax.legend(frameon=False, loc = 'best', ncol=2)
+    plt.ylim([.0, .35])
+    output = st.write(fig)
+    return output
+
+def get_time_graph_fbldgb(df):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter("PA", "FB%", data = df)
+    ax.plot("PA", "FB%", data = df, label='_FB%')
+    ax.scatter("PA", "LD%", data = df)
+    ax.plot("PA", "LD%", data = df, label='_LD%')
+    ax.scatter("PA", "GB%", data = df)
+    ax.plot("PA", "GB%", data = df, label='_GB%')
+    ax.set_xlabel('PA')
+    ax.legend(frameon=False, loc = 'best')
+    plt.ylim([.10,.60])
+    output = st.write(fig)
+    return output
+
+def get_time_graph_hrfb(df):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter("PA", "ISO", data = df)
+    ax.plot("PA", "ISO", data = df, label='_ISO')
+    ax.scatter("PA", "FB%", data = df)
+    ax.plot("PA", "FB%", data = df, label='_FB%')
+    ax.scatter("PA", "HR/FB", data = df)
+    ax.plot("PA", "HR/FB", data = df, label='_HR/FB')
+    ax.set_xlabel('PA')
+    ax.legend(frameon=False, loc = 'best')
+    plt.ylim([.10, .50])
+    output = st.write(fig)
+    return output
+
+def get_time_graph_wrcbabip(df):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter("PA", "K%", data = df)
+    ax.plot("PA", "K%", data = df, label='_wRC+')
+    ax.scatter("PA", "BABIP", data = df)
+    ax.plot("PA", "BABIP", data = df, label='_BABIP')
+    ax.scatter("PA", "HR/FB", data = df)
+    ax.plot("PA", "HR/FB", data = df, label='_HR/FB')
+    ax.set_xlabel('PA')
+    ax.legend(frameon=False, loc = 'best')
+    plt.ylim([.10, .450])
+    output = st.write(fig)
+    return output
 
 #### SETTING UP THE SELECTION ###########################################
 sel_row = grid_table["selected_rows"]
@@ -281,7 +421,7 @@ if sel_row:
     sel_id_max = sel_id + '-' + date_max
     df_sel_date_max = df_date_max.loc[[sel_id_max]]
     df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
-    st.dataframe(df_sel_date_max_2)
+    #st.dataframe(df_sel_date_max_2)
     frames = []
             
     sel_id_6 = sel_id + '-' + date_6
@@ -300,6 +440,7 @@ if sel_row:
     df_sel_all_dates = df_sel_all_dates.sort_values(by=['G'],ascending=False)
     # df_sel_all_dates = df_sel_all_dates.loc[:,~df_sel_all_dates.columns.duplicated()]
     df_sel_all_dates_2 = df_sel_all_dates.filter(cols_xyz, axis=1)
+    df_sel_all_dates_2 = df_sel_all_dates_2.reset_index()
     #st.dataframe(df_sel_all_dates_2)
     # fig = plt.figure()
     
@@ -319,13 +460,93 @@ if sel_row:
         result = pd.concat(frames)
         st.table(result)
     
-    st.dataframe(df_sel_all_dates_2)
+    df_sel_all_dates = df_raw[df_raw['PlayerID'].str.contains(sel_pid)]
+    df_sel_all_dates = df_sel_all_dates.sort_values(by=['G'],ascending=False)
+    # df_sel_all_dates = df_sel_all_dates.loc[:,~df_sel_all_dates.columns.duplicated()]
+    df_sel_all_dates_2 = df_sel_all_dates.filter(cols_xyz, axis=1)
+    df_sel_all_dates_2 = df_sel_all_dates_2.dropna()
+    df_sel_all_dates_2 = df_sel_all_dates_2.reset_index()
+    
+    #st.dataframe(df_sel_all_dates_2)
+
+    
+    col4, col5, col6 = st.columns(3)
+    
+    with col4:
+        get_time_graph_bbkswstr(df_sel_all_dates_2)
+        get_time_graph_hrfb(df_sel_all_dates_2)
+        # get_time_graph('wRC+', df_sel_all_dates_2, 100, 200)
+        # get_time_graph('ISO', df_sel_all_dates_2, .100, .400)
+        # get_time_graph('BABIP', df_sel_all_dates_2, .250, .500)
+        # get_time_graph('OPS', df_sel_all_dates_2, .700, 1.100)
 
 
+    with col5:
+        # get_time_graph('K%', df_sel_all_dates_2, .10, .40)
+        # get_time_graph('SwStr%', df_sel_all_dates_2, .05, .25)
+        # get_time_graph('BB%', df_sel_all_dates_2, .0, .250)
+        # #get_time_graph('SB', df_sel_all_dates_2, 0, 30)
+        get_time_graph_hrsb(df_sel_all_dates_2, 0, 30)
+        
+        fig, axes = plt.subplots(2,2)
+        # just plot things on each individual axes
+        x = df_sel_all_dates_2['PA']
+        y1 = df_sel_all_dates_2['wRC+']
+        y2 = df_sel_all_dates_2['ISO']
+        y3 = df_sel_all_dates_2['BABIP']
+        y4 = df_sel_all_dates_2['K%']
+        # one plot on each subplot
+        axes[0][0].scatter(x,y1)
+        axes[0][0].plot(x,y1)
+        axes[0][0].set_ylim([100, 200])
+        axes[0][0].legend(['wRC+'])
+        axes[0][1].scatter(x,y2)
+        axes[0][1].plot(x,y2)
+        axes[0][1].set_ylim([.100, .400])
+        axes[0][1].legend(['ISO'])
+        axes[1][0].scatter(x,y3)
+        axes[1][0].plot(x,y3)
+        axes[1][0].set_ylim([.100, .400])
+        axes[1][0].legend(['BABIP'])
+        axes[1][1].scatter(x,y4)
+        axes[1][1].plot(x,y4)
+        axes[1][1].legend(['K%'])
+        axes[1][1].set_ylim([.100, .400])
+        st.write(fig)
 
-
-
-
+        
+    with col6:
+        get_time_graph_fbldgb(df_sel_all_dates_2)
+        # get_time_graph('FB%', df_sel_all_dates_2, .2, .6)
+        # get_time_graph('LD%', df_sel_all_dates_2, .100, .400)
+        # get_time_graph('GB%', df_sel_all_dates_2, .200, .600)
+        get_time_graph_wrcbabip(df_sel_all_dates_2)
+          
+    # with col5:
+    #     fig = plt.figure()
+    #     plt.scatter('PA','wRC+', data= df_sel_all_dates_2)
+    #     st.write(fig) 
+    #     # fig = plt.figure()
+    #     # plt.plot(x = df_sel_all_dates_2['PA'], y=df_sel_all_dates_2['ISO'])
+    #     # st.write(fig)     
+        
+    #     # fig = plt.figure()
+    #     # plt.plot(x = df_sel_all_dates_2['PA'], y=df_sel_all_dates_2['BB%'])
+    #     # st.write(fig)         
+        
+    # with col6:
+    #     fig = plt.figure()
+    #     plt.scatter(x = df_sel_all_dates_2['PA'], y=df_sel_all_dates_2['K%'])
+    #     st.write(fig)
+        
+    #     fig = plt.figure()
+    #     plt.scatter(x = df_sel_all_dates_2['PA'], y=df_sel_all_dates_2['SwStr%'])
+    #     st.write(fig)          
+    
+    df_sel_hist = df_hist_recent[df_hist_recent['PlayerID'].str.contains(sel_pid)]
+    df_sel_hist = df_sel_hist.filter(cols_hist_display, axis=1)
+    df_sel_hist = df_sel_hist.sort_values(by=['Season'],ascending=False)
+    st.dataframe(df_sel_hist)
 
 
 #### SEARCH FUNCTION ###################################################
@@ -372,245 +593,3 @@ if search_submit:
                         theme='blue')
     #sel_row = grid_table_search["selected_rows"]
 
-#### ADD SOME VARIABLES #################################################
-df_hist['level_code'] = df_hist['level'].map({
-    "AAA": 8,
-    "AA": 7,
-    "A+": 6,
-    "A": 5,
-    "A-": 4,
-    "CPX": 1,
-    "R": 1,
-    "DSL": 1,
-})
-
-df_hist['Name/Org'] = df_hist['name'] + '-' + df_hist['team']
-
-#### COLUMNS #############################################################
-cols_hist = [
-    'Name/Org/Year', 'age', 'level', 'pa', 'wrcplus', 'iso', 'kpct', 
-    'swstrpct', 'bbpct', 'xSpect', 'OPS', 'babip', 'avg', 'obp', 'slg',
-    'hr', 'hrperfb', 'sb', 'cs', 'fbpct', 'ldpct', 'gbpct', 'pullpct',
-    'centpct', 'oppopct', 'level_code'
-    ]
-
-cols_hist_display = [
-    'Name/Org/Year', 'Age', 'Level', 'PA', 'wRC+', 'ISO', 'K%',
-    'SwStr%', 'BB%', 'xSpect', 'OPS', 'BABIP', 'AVG', 'OBP', 'SLG', 
-    'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'LD%', 'GB%', 'Pull%', 'Cent%',
-    'Oppo%', 'level_code'
-    ]
-
-cols_curr = [
-    'Name/Org', 'Age', 'Level', 'PA', 'wRC+', 'ISO', 'K%',
-    'SwStr%', 'BB%', 'xSpect', 'OPS', 'BABIP', 'AVG', 'OBP', 
-    'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%', 'Oppo%', 'hmm', 'xPOPS', 'id'
-    ]
-
-cols_time = [
-    'Name/Org', 'Age', 'Level', 'PA', 'wRC+', 'ISO', 'K%',
-    'SwStr%', 'BB%', 'xSpect', 'OPS', 'BABIP', 'AVG', 'OBP', 
-    'SLG', 'XBH', 'HR', 'HR/FB', 'SB', 'CS', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%', 'Oppo%', 'hmm', 'xPOPS', 'id', 'Days'
-    ]
-
-cols_pct = [
-    'K%', 'SwStr%', 'BB%', 'HR/FB', 'FB%', 'GB%', 'LD%',
-    'Pull%', 'Cent%', 'Oppo%'
-]
-
-cols_slash = [
-    'ISO', 'BABIP', 'AVG', 'OBP', 'SLG'
-]
-
-
-# #######################################################################
-# #### --- TRANSFORM THE DATA  ------------------------------------ #####
-# df_hist['xSpect'] = (df_hist['iso']/(df_hist['kpct']+df_hist['swstrpct'])).round(3)
-# df_hist['Name/Org/Year'] = df_hist['name'] + ' - ' + df_hist['team'] + ' - ' + (df_hist['season']).astype(str)
-# df_hist['OPS'] = (df_hist['obp'] + df_hist['slg']).round(3)
-# df_hist = df_hist[cols_hist]
-# df_hist = df_hist[(df_hist['age'] <= input_age)]
-# df_hist = df_hist[(df_hist['pa'] >= input_pa_hist)]
-# #df_hist = df_hist[df_hist['level'].isin(input_levels)]
-# df_hist['wrcplus'] = df_hist['wrcplus'].round(0)
-# df_hist2 = df_hist[(df_hist['iso'] >= input_iso) &
-#                  (df_hist['kpct'] <= input_kpct) &
-#                  (df_hist['bbpct'] >= input_bbpct) &
-#                  (df_hist['wrcplus'] >= input_wrcplus)]
-# df_hist2.columns = cols_hist_display
-# df_hist2.sort_values(by='wRC+', ascending=False)
-# #######################################################################
-# #######################################################################
-# df_raw['Name/Org'] = (df_raw['Name'] + " - " + df_raw['Org'])
-# df_raw['XBH'] = df_raw['2B'] + df_raw['3B'] + df_raw['HR']
-# df_raw['idk'] = ((2*df_raw['ISO'])+(df_raw['BB%']/2))**(((3*df_raw['K%'])+df_raw['SwStr%'])**df_raw['BABIP']).round(3)
-# df_raw['xSpect'] = (df_raw['ISO']/(df_raw['K%']+df_raw['SwStr%'])).round(3)
-# df_raw2 = df_raw.filter(cols_curr, axis=1)
-# df_raw2 = df_raw2[(df_raw2['Age'] <= input_age)]
-# df_raw2 = df_raw2[(df_raw2['PA'] >= input_pa_curr)]
-# df_raw2 = df_raw2.round(3)
-# df_raw2['wRC+'] = df_raw2['wRC+'].round(0)
-# df_raw2 = df_raw2[(df_raw2['ISO'] >= input_iso) &
-#                  (df_raw2['K%'] <= input_kpct) &
-#                  (df_raw2['BB%'] >= input_bbpct) &
-#                  (df_raw2['wRC+'] >= input_wrcplus)]
-# df_raw2 = df_raw2.sort_values(by='wRC+', ascending=False)
-# #######################################################################
-
-# #######################################################################
-# #### --- THE FIRST DATA TABLE ----------------------------------- #####
-# # configure grid options for Ag-Grid table
-# gd = GridOptionsBuilder.from_dataframe(df_raw2)
-# gd.configure_pagination(enabled=True)
-# gd.configure_default_column(editable=True, groupable=True)
-# gd.configure_selection(selection_mode='single', use_checkbox=True, pre_selected_rows=[0])
-# gridoptions1 = gd.build()
-# grid_table = AgGrid(df_raw2, gridOptions=gridoptions1,
-#                     update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-#                     height=530,
-#                     allow_unsafe_jscode=True,
-#                     enable_enterprise_modules = True,
-#                     theme='blue')
-
-# #### SETTING UP THE SELECTION ###########################################
-# sel_row = grid_table["selected_rows"]
-
-# if sel_row != "":
-#     #st.write(sel_row)
-#     df_sel = pd.DataFrame(sel_row)
-#     st.subheader("Selected player: " + df_sel['Name/Org'].iloc[0] + ' | Level: ' + df_sel['Level'].iloc[0])
-#     #st.table(df_sel)
-
-#     sel_iso = df_sel['ISO'].iloc[0]
-#     sel_kpct = df_sel['K%'].iloc[0]
-#     sel_bbpct = df_sel['BB%'].iloc[0]
-#     sel_wrcplus = df_sel['wRC+'].iloc[0]
-#     sel_age = df_sel['Age'].iloc[0].astype(int)
-#     sel_level = df_sel['Level'].iloc[0]
-#     sel_swstrpct = df_sel['SwStr%'].iloc[0]
-    
-#     sel_buff_iso = (sel_iso - input_buffer_iso).round(3)
-#     sel_buff_kpct = (sel_kpct + input_buffer_kpct).round(3)
-#     sel_buff_bbpct = (sel_bbpct - input_buffer_bbpct).round(3)
-#     #sel_buff_age = sel_age + 1
-#     #sel_buff_level = sel_level + 1
-#     #sel_buff_swstrpct = sel_swstrpct - input_buffer_other
-#     #sel_days = df_sel['Days'].iloc[0]
-#     #st.subheader("Last " + sel_days + " days")
-#     # sel_id = df_sel.id[0]
-#     # df_sel_date_max = df_date_max.loc[[sel_id]]
-#     # df_sel_date_6 = df_date_6.loc[[sel_id]]
-#     # df_sel_date_6['Days'] = df_date_6.Days[0]
-#     # df_sel_date_6.set_index('Days', inplace=True)
-#     # df_sel_date_12 = df_date_12.loc[[sel_id]]
-#     # df_sel_date_12['Days'] = df_date_12.Days[0]
-#     # df_sel_date_12.set_index('Days', inplace=True)
-#     # df_sel_date_max['Days'] = df_date_max.Days[0]
-#     # df_sel_date_max.set_index('Days', inplace=True)
-#     # #df_sel_curr = df_raw2.loc[[sel_id]]
-#     # frames = [df_sel_date_6, df_sel_date_12, df_sel_date_max]
-#     # result = pd.concat(frames)
-#     # st.write('Last 7')
-#     # st.table(df_sel_date_6)
-#     # st.write('Last 14')
-#     # st.table(df_sel_date_12)
-#     # st.write('Last ' + str(df_date_max.Days[0]))
-#     #st.table(result)
-    
-#     # st.write('Level Total')
-#     # st.table(df_sel_curr)
-
-
-#     sel_id = df_sel.id[0]
-
-
-# # if sel_id in df_date_6.index.values:
-# #     df_sel_date_6 = df_date_6.loc[[sel_id]]
-# #     df_sel_date_6['Days'] = df_date_6['Days'][0]
-# #     df_sel_date_6['Days'] = 'Last ' + df_sel_date_6['Days'].astype(str)
-# #     df_sel_date_6.set_index('Days', inplace=True)
-# # else: 
-# #     df_sel_date_6 = pd.DataFrame({}, columns=df_date_6.columns, index = ['Days'])
-
-# # if sel_id in df_date_12.index.values:
-# #     df_sel_date_12 = df_date_12.loc[[sel_id]]
-# #     df_sel_date_12['Days'] = df_date_12['Days'][0]
-# #     df_sel_date_12['Days'] = 'Last ' + df_sel_date_12['Days'].astype(str)
-# #     df_sel_date_12.set_index('Days', inplace=True)
-# # else:
-# #     df_sel_date_12 = pd.DataFrame({}, columns=df_date_12.columns, index = ['Days'])
-
-# # if sel_id in df_date_max.index.values:
-# #     df_sel_date_max = df_date_max.loc[[sel_id]]
-# #     df_sel_date_max['Days'] = df_date_max['Days'][0]
-# #     df_sel_date_max['Days'] = 'Last ' + df_sel_date_max['Days'].astype(str)
-# #     df_sel_date_max.set_index('Days', inplace=True)
-# # else:
-# #     df_sel_date_max = pd.DataFrame({}, columns=df_date_max.columns, index = ['Days'])
-
-# # if sel_id in allidx:
-# #     frames = [
-# #         df_sel_date_6,
-# #         df_sel_date_12,
-# #         df_sel_date_max
-# #         ]
-# #     result = pd.concat(frames)
-# #     result2 = result.drop(columns=['Name/Org', 'Age', 'Level', 'id'])
-# #     result2['Split'] = result2.index
-# #     # shift column 'Name' to first position
-# #     first_column = result2.pop('Split')
-    
-# #     # insert column using insert(position,column_name,
-# #     # first_column) function
-# #     result2.insert(0, 'Split', first_column)
-# #     # CONFIGURE GRID OPTIONS ###############################################
-# #     gb2 = GridOptionsBuilder.from_dataframe(result2)
-# #     gb2.configure_default_column(min_column_width = .1)
-# #     gridoptions3 = gb2.build()
-
-# #     AgGrid(
-# #         result2,
-# #         gridOptions=gridoptions3,
-# #         height=100,
-# #         enable_enterprise_modules=True,
-# #         theme = "blue"
-# #     )
-
-# # else:
-# #     st.write('This player has not played during this period')
-    
-
-
-# ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
-# ## THIS WORKS WITHOUT THE BUFFERS #####################################
-# #df_hist3 = df_hist2[(df_hist2['iso'] >= sel_iso) & (df_hist2['kpct'] <= sel_kpct) & (df_hist2['bbpct'] >= sel_bbpct)]
-# #either above code or below code depending on whether or not the buffers are working -_- #
-
-# ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
-# ## WITH BUFFERS #######################################################
-# df_hist3 = df_hist2[
-#     (df_hist2['ISO'] >= sel_buff_iso) &
-#     (df_hist2['K%'] <= sel_buff_kpct) &
-#     (df_hist2['BB%'] >= sel_buff_bbpct) &
-#     (df_hist2['Age'] <= sel_age)
-# ]
-          
-# df_hist3 = df_hist3.sort_values(by='level_code', ascending=False)
-
-# # CONFIGURE GRID OPTIONS ###############################################
-# gb = GridOptionsBuilder.from_dataframe(df_hist3)
-# gb.configure_pagination(enabled=True)
-# gb.configure_side_bar()
-
-# gb.configure_default_column(min_column_width = .1, groupable=True, value=True, enableRowGroup=True, aggFunc="mean", editable=True)
-# gridoptions2 = gb.build()
-
-# AgGrid(
-#     df_hist3,
-#     gridOptions=gridoptions2,
-#     height=530,
-#     enable_enterprise_modules=True,
-#     theme = "blue"
-# )
