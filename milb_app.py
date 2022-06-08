@@ -513,7 +513,7 @@ def get_pct_disp(met):
 if sel_row:
     df_sel = pd.DataFrame(sel_row)
     st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
-    st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA)')
+    st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA) at Level: ' + (df_sel['Level'].iloc[0]))
     
     sel_id = df_sel.IndexSplit2[0]
     sel_pid = df_sel.PlayerID[0]
