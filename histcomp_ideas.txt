@@ -26,3 +26,13 @@ time_split_app
 will populate with that player's season totals (and maybe the L7, L30, etc.)
 -which players have made the biggest changes in leading indicators (i.e., FB%, LD%, ISO, etc.)
     -so you select a time split and a category and then it displays a new table sorted by that category
+
+wRC+ emulator
+-it would be really cool if you could have an app that allows the user to select and manipulate variables in order to try to replicate wRC+
+the point really would be to try to isolate the impact of BABIP on wRC+ so that you could take a player's stats and basically calculate what
+their wRC+ WOULD BE if there BABIP was X
+-would be particularly useful for finding players who are in that middle range where they might have a 122 wRC+ cause of a .285 BABIP but if their 
+BABIP was closer to even league average ~.300 maybe that's a 132 wRC+ and if it was .365 maybe it's a 172 wRC+
+-one of the problems is the importance of HR in wRC+ but that is nonexistent in BABIP
+    -so naturally, we have to include HR/FB in this calculation 
+        -as well as probably FB%

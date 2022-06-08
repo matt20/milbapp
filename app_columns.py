@@ -36,7 +36,10 @@ df_raw = load_df_raw()
 
 #######################################################################################################
 
+#st.dataframe(df_raw)
+
 df_raw['IndexSplit'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
+df_raw['IndexSplit2'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
 
 def get_df_filter(date):
     return df_raw.loc[(df_raw['Date'].astype(str) == date)].copy()
@@ -54,30 +57,27 @@ def get_df_filter_days(days):
 ################################################################################################
 #### SET UP COLUMNS ############################################################################
 
-# cols_clean = ['Name','Org','Level','Age','PlayerID',
-#              'PlayerIDLevel','Date','PlayerIDUnique',
-#              'G','AB','PA','H','1B','2B','3B','HR','R',
-#              'RBI','BB','IBB','SO','HBP','SF','SH','GDP',
-#              'SB','CS','Balls','Strikes','Pitches','BB%',
-#              'K%','BB/K','AVG','OBP','SLG','OPS','ISO',
-#              'BABIP','wSB','wRC','wRAA','wOBA','wRC+',
-#              'GB/FB','LD%','GB%','FB%','IFFB%','HR/FB',
-#              'Pull%','Cent%','Oppo%','SwStr%']
-
 cols_count = ['G','AB','PA','H','1B','2B','3B','HR','R',
              'RBI','BB','IBB','SO','HBP','SF','SH','GDP',
              'SB','CS','IndexSplit'
              #,'Balls','Strikes','Pitches','wRC+']
 ]
 
-cols_bio = ['Name','Org','Level','Age','IndexSplit'
+cols_bio = ['Name','Org','Level','Age','IndexSplit','IndexSplit2','PlayerID'
             ]
 
 cols_split_display = [
     'Name','Org','Age','Level','PA',
     'xSpect','ISO','K%','BB%',
     'OPS','BABIP','AVG','OBP','SLG',
-    'HR','XBH','SB','CS'
+    'HR','XBH','SB','CS','IndexSplit2','PlayerID'
+]
+
+cols_xyz = [
+    'Name','Age','Level','PA',
+    'wRC+','ISO','K%','BB%',
+    'OPS','BABIP','AVG','OBP','SLG',
+    'HR', '2B', '3B','SB','CS','IndexSplit2'
 ]
 
 ################################################################################################
@@ -95,11 +95,20 @@ days_back_choice = df_raw['DaysBack'].unique()
 days_back_choice = sorted(days_back_choice)
 
 date_max = dates_choice_end[0]
-df_recent = get_df_filter(date_max)
+df_date_max = get_df_filter(date_max)
+
+date_min = dates_choice_start[0]
+df_date_min = get_df_filter(date_min)
+
+date_6 = dates_choice_end[6]
+df_date_6 = get_df_filter(date_6)
+
+date_12 = dates_choice_end[12]
+df_date_12 = get_df_filter(date_12)
 
 col1, col2, col3 = st.columns(3)
 
-## TEST CODE FOR COLS DAY BACK DROP DOWN ##
+## COLUMNS AND SEARCH ############################################################################
 
 with col1:
     date_start = st.selectbox(
@@ -121,60 +130,6 @@ with col3:
         (days_back_choice))
     days_submit = st.checkbox('Use days instead of date range')
 
-search_input = st.text_input(label='Search for a player')
-search_submit = st.checkbox('Submit search')
-
-## WORKING COLS CODE BELOW ###
-
-
-# col1, col2, col3 = st.columns(3)
-
-# with col1:
-#     date_start = st.selectbox(
-#     'Choose a starting date',
-#     (dates_choice_start))
-    
-#     date_start_dt = datetime.strptime(date_start, '%Y-%m-%d') #string to date
-
-# with col2:
-#     date_end = st.selectbox(
-#     'Choose an ending date',
-#     (dates_choice_end))
-
-#     date_end_dt = datetime.strptime(date_end, '%Y-%m-%d') #string to date
-    
-# with col3:
-#     search_input = st.text_input(label='Search for a player')
-#     search_submit = st.checkbox('Submit search')
-
-
-# dates_choice_start = df_raw['Date'].unique()
-# dates_choice_start = sorted(dates_choice_start, 
-#                             key=lambda date: datetime.strptime(date, '%Y-%m-%d'))
-
-# date_start = st.selectbox(
-#     'Choose a starting date',
-#     (dates_choice_start)
-# )
-
-# date_start_dt = datetime.strptime(date_start, '%Y-%m-%d') #string to date
-
-
-# dates_choice_end = df_raw['Date'].unique()
-# dates_choice_end = sorted(dates_choice_end, 
-#                           key=lambda date: datetime.strptime(date, '%Y-%m-%d'), reverse=True)
-
-# date_end = st.selectbox(
-#     'Choose an ending date',
-#     (dates_choice_end)
-# )
-
-# date_end_dt = datetime.strptime(date_end, '%Y-%m-%d') #string to date
-
-# date_diff = date_end_dt - date_start_dt
-# date_diff_str = str(date_diff.days)
-# st.write(date_diff_str)
-
 ################################################################################################
 #### SET UP THE DATA FRAME BASED ON USER INPUT #################################################
 ### EXPERIMENTAL FILTERS #######################################################################
@@ -185,7 +140,6 @@ def df_to_int(df):
     for col in cols_count:
         df[col] = df[col].astype('int')
         return pd.DataFrame(df)
-
 
 if days_submit:
     df_start = get_df_filter_days(days_back)
@@ -198,140 +152,89 @@ else:
 
 days_back_var = str(df_start.DaysBack[0])
 
-df_count_start = get_df_count(df_start)
-df_count_end = get_df_count(df_end)
+def get_df_diff(dfEnd, dfStart):
+    df_count_start = get_df_count(dfStart)
+    df_count_end = get_df_count(dfEnd)
 
-df_count_start.set_index('IndexSplit', inplace=True)
-df_count_end.set_index('IndexSplit', inplace=True)
+    df_count_start.set_index('IndexSplit', inplace=True)
+    df_count_end.set_index('IndexSplit', inplace=True)
 
-df_count_start = df_to_int(df_count_start)    
-df_count_end = df_to_int(df_count_end)   
+    df_count_start = df_to_int(df_count_start)    
+    df_count_end = df_to_int(df_count_end)   
 
-df_diff_1 = df_count_end.subtract(df_count_start, fill_value=0).astype(int)
-df_diff_2 = df_diff_1[df_diff_1['PA'] > 0]
+    df_diff = df_count_end.subtract(df_count_start, fill_value=0).astype(int)
+    return df_diff[df_diff['PA'] > 0]
+ 
 
-
-
-## WORKING FILTERS #####################
-
-# df_start = get_df_filter(date_start)
-
-# df_end = get_df_filter(date_end)
-
-# #st.dataframe(df_start)
-
-# # @st.cache(allow_output_mutation=True)
-# def get_df_count(df):
-#     return df.filter(cols_count, axis=1)
-
-# df_count_start = get_df_count(df_start)
-# df_count_end = get_df_count(df_end)
-
-# #st.dataframe(df_count_end)
-
-# df_count_start.set_index('IndexSplit', inplace=True)
-# df_count_end.set_index('IndexSplit', inplace=True)
-
-# # def get_df_diff(dfEnd, dfStart):
-# #     return dfEnd.subtract(dfStart, axis = 0, fill_value=0)
-
-# # df_diff = get_df_diff(df_count_end, df_count_start)
-
-# #st.dataframe(df_diff)
-
-# def df_to_int(df):
-#     for col in cols_count:
-#         df[col] = df[col].astype('int')
-#         return pd.DataFrame(df)
-        
-# df_count_start = df_to_int(df_count_start)    
-# df_count_end = df_to_int(df_count_end)   
-
-# # st.dataframe(df_count_end)
-# # st.dataframe(df_count_start)
-# # st.dataframe(df_count_end.sort_values(by=['PA'], ascending=False))
-# # st.dataframe(df_count_end.sort_values(by=['PA'], ascending=False))
-# #st.dataframe(df_diff)
-# df_diff_1 = df_count_end.subtract(df_count_start, fill_value=0).astype(int)
-# df_diff_2 = df_diff_1[df_diff_1['PA'] > 0]
-# # pa_mean = df_diff_2['PA'].mean()
-# # dfhmm4 = df_diff_2[df_diff_2['PA'] < (2.5*pa_mean)]
-# # st.dataframe(dfhmm.sort_values(by='PA', ascending=False))
-
-# # hmmstart = pd.DataFrame(df_count_start, index = ['sa3004142-A+-TEX'])
-# # hmmstart2  = df_start[df_start['Name'].str.contains('Seise')]
-# # hmmraw  = df_raw[df_raw['Name'].str.contains('Seise')]
-# # hmmstart3  = df_start[(df_start['Org'].str.contains('TEX')) & (df_start['Level'] == "A+")]
-# # hmmend = pd.DataFrame(df_count_end, index = ['sa3004142-A+-TEX'])
-
-# # st.dataframe(hmmstart)
-# # st.dataframe(hmmraw)
-# # st.dataframe(hmmstart3)
-# # st.dataframe(hmmend)
-# # st.dataframe(df_diff_1.sort_values(by=['PA'], ascending=False))
-# # st.write(df_diff_1.shape)
-# # st.write(df_count_start.shape)
-# # st.write(df_count_end.shape)
-# #st.dataframe(df_diff_1.sort_values(by=['PA'], ascending=False))
+df_diff_input = get_df_diff(df_end, df_start)
 
 ################################################################################################
 #### SETTING UP THE BIO DF TO MERGE BACK IN WITH THE SPLITS DATA ###############################
 
-df_bio = df_recent.filter(cols_bio, axis=1)
+df_bio = df_date_max.filter(cols_bio, axis=1)
 df_bio.set_index('IndexSplit', inplace=True)
 
-df_splits = pd.merge(df_bio, df_diff_2, left_index=True, right_index=True)
+def merge_with_bio(df):
+    return pd.merge(df_bio, df, left_index=True, right_index=True)
+
+df_splits = merge_with_bio(df_diff_input)
 
 df_splits.sort_values(by=['PA'])
 
-# pa_max = (df_splits['PA'].max()).astype(int)
 # pa_mean = (df_splits['PA'].mean()).astype(int)
 
-hmm = df_splits['PA'].max()
-hmm2 = int(hmm)
-pa_max = hmm2
-pa_mean = 10
+splits_pa_max = int(df_splits['PA'].max())
+#splits_pa_max = splits_pa_max_0
 
-#st.write(pa_mean)
 #### SIDEBAR ###########################################################
 input_age = st.sidebar.slider('Max Age:', 16, 32, 20)
-input_pa_min = st.sidebar.slider('Min PA (Splits):', 1, pa_max, 1)
-input_pa_max = st.sidebar.slider('Max PA (Splits):', 50, pa_max, pa_max)
+input_pa_min = st.sidebar.slider('Min PA (Splits):', 1, splits_pa_max, 1)
+input_pa_max = st.sidebar.slider('Max PA (Splits):', 50, splits_pa_max, splits_pa_max)
 input_kpct = st.sidebar.slider('Max K%:', .0, .400, .300)
 input_iso = st.sidebar.slider('Min ISO:', .0, .400, .150)
-input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .05)
+input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
 # input_buffer_iso = st.sidebar.slider('ISO Buffer:', .0, .100, .0)
 # input_buffer_kpct = st.sidebar.slider('K% Buffer:', .0, .100, .0)
 # input_buffer_bbpct = st.sidebar.slider('BB% Buffer:', .0, .100, .0)
 # input_pa_hist = st.sidebar.slider('Min PA (Hist):', 100, 400, 100)
 
-
 ################################################################################################
 #### CALCULATING THE SPLIT RATIO STATS #########################################################
 
-df_splits['BABIP'] = ((df_splits.H-df_splits.HR)/(df_splits.AB-df_splits.SO-df_splits.HR+df_splits.SF+df_splits.SH)).round(3)
-df_splits['AVG'] = (df_splits.H/df_splits.AB).round(3)
-df_splits['OBP'] = ((df_splits.H+df_splits.BB+df_splits.HBP)/df_splits.PA).round(3)
-df_splits['SLG'] = (((df_splits['1B'])+(2*df_splits['2B'])+(3*df_splits['3B'])+(4*df_splits.HR))/df_splits.AB).round(3)
-df_splits['ISO'] = (df_splits.SLG - df_splits.AVG).round(3)
-df_splits['XBH'] = (df_splits['2B']+df_splits['3B']+df_splits.HR).astype(int)
-df_splits['K%'] = (df_splits.SO/df_splits.PA).round(3)
-df_splits['BB%'] = (df_splits.BB/df_splits.PA).round(3)
-df_splits['xSpect'] = (df_splits.ISO/(2*df_splits['K%'])).round(3)
-df_splits['OPS'] = (df_splits.OBP + df_splits.SLG).round(3)
-#df_splits['days'] = pd.to_numeric(datediffstr)
-df_splits_2 = df_splits[(df_splits['ISO'] >= input_iso) &
-                      (df_splits['K%'] <= input_kpct) &
-                      (df_splits['BB%'] >= input_bbpct) &
-                      (df_splits['Age'] <= input_age) &
-                      (df_splits['PA'] >= input_pa_min) &
-                      (df_splits['PA'] <= input_pa_max)
-]
+def calc_split_stats(df):
+    df['BABIP'] = ((df.H-df.HR)/(df.AB-df.SO-df.HR+df.SF+df.SH)).round(3)
+    df['AVG'] = (df.H/df.AB).round(3)
+    df['OBP'] = ((df.H+df.BB+df.HBP)/df.PA).round(3)
+    df['SLG'] = (((df['1B'])+(2*df['2B'])+(3*df['3B'])+(4*df.HR))/df.AB).round(3)
+    df['ISO'] = (df.SLG - df.AVG).round(3)
+    df['XBH'] = (df['2B']+df['3B']+df.HR).astype(int)
+    df['K%'] = (df.SO/df.PA).round(3)
+    df['BB%'] = (df.BB/df.PA).round(3)
+    df['xSpect'] = (df.ISO/(2*df['K%'])).round(3)
+    df['OPS'] = (df.OBP + df.SLG).round(3)
+    df = df.filter(cols_split_display, axis=1)
+    return df
 
+def filter_by_input(df):
+    return df[(df['ISO'] >= input_iso) &
+                        (df['K%'] <= input_kpct) &
+                        (df['BB%'] >= input_bbpct) &
+                        (df['Age'] <= input_age) &
+                        (df['PA'] >= input_pa_min) &
+                        (df['PA'] <= input_pa_max)
+    ]
+
+
+df_splits_2 = calc_split_stats(df_splits)
+
+df_splits_2 = filter_by_input(df_splits_2)
 
 df_splits = df_splits.filter(cols_split_display, axis=1)
 df_splits_2 = df_splits_2.filter(cols_split_display, axis=1)
+
+# format_dict = {'K%': '{:.2%}', 'BB%': '{:.2%}'}
+# df_splits_2.style.format(format_dict)
 
 st.write('Last ' + days_back_var + ' days')
 
@@ -341,7 +244,7 @@ st.write('Last ' + days_back_var + ' days')
 gd = GridOptionsBuilder.from_dataframe(df_splits_2)
 gd.configure_pagination(enabled=True)
 gd.configure_default_column(editable=True, groupable=True)
-gd.configure_selection(selection_mode='single', use_checkbox=True, pre_selected_rows=[0])
+gd.configure_selection(selection_mode='single', use_checkbox=True)
 gridoptions1 = gd.build()
 grid_table = AgGrid(df_splits_2, gridOptions=gridoptions1,
                     update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
@@ -350,20 +253,91 @@ grid_table = AgGrid(df_splits_2, gridOptions=gridoptions1,
                     enable_enterprise_modules=True,
                     theme='blue')
 
+#### SETTING UP THE SELECTION ###########################################
+sel_row = grid_table["selected_rows"]
+
+if sel_row:
+    df_sel = pd.DataFrame(sel_row)
+    st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0] + ' | Level: ' + df_sel['Level'].iloc[0])
+    #st.table(df_sel)
+
+    sel_iso = df_sel['ISO'].iloc[0]
+    sel_kpct = df_sel['K%'].iloc[0]
+    sel_bbpct = df_sel['BB%'].iloc[0]
+    sel_age = df_sel['Age'].iloc[0].astype(int)
+    sel_level = df_sel['Level'].iloc[0]
+    
+    # sel_buff_iso = (sel_iso - input_buffer_iso).round(3)
+    # sel_buff_kpct = (sel_kpct + input_buffer_kpct).round(3)
+    # sel_buff_bbpct = (sel_bbpct - input_buffer_bbpct).round(3)
+    #sel_buff_age = sel_age + 1
+    #sel_buff_level = sel_level + 1
+    #sel_buff_swstrpct = sel_swstrpct - input_buffer_other
+    #sel_days = df_sel['Days'].iloc[0]
+    #st.subheader("Last " + sel_days + " days")
+    sel_id = df_sel.IndexSplit2[0]
+    sel_pid = df_sel.PlayerID[0]
+    
+    sel_id_max = sel_id + '-' + date_max
+    df_sel_date_max = df_date_max.loc[[sel_id_max]]
+    df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
+    st.dataframe(df_sel_date_max_2)
+    frames = []
+            
+    sel_id_6 = sel_id + '-' + date_6
+    if (sel_id in df_date_6['IndexSplit2'].values):
+        df_sel_date_6 = df_date_6.loc[[sel_id_6]]
+        df_sel_date_6_split = get_df_diff(df_sel_date_max, df_sel_date_6)
+        df_sel_date_6_split = calc_split_stats(df_sel_date_6_split)
+        frames = [df_sel_date_6_split]
+    sel_id_12 = sel_id + '-' + date_12
+    if (sel_id in df_date_12['IndexSplit2'].values):
+        df_sel_date_12 = df_date_12.loc[[sel_id_12]]
+        df_sel_date_12_split = get_df_diff(df_sel_date_max, df_sel_date_12)
+        df_sel_date_12_split = calc_split_stats(df_sel_date_12_split)
+        frames = [df_sel_date_6_split, df_sel_date_12_split]
+    df_sel_all_dates = df_raw[df_raw['PlayerID'].str.contains(sel_pid)]
+    df_sel_all_dates = df_sel_all_dates.sort_values(by=['G'],ascending=False)
+    # df_sel_all_dates = df_sel_all_dates.loc[:,~df_sel_all_dates.columns.duplicated()]
+    df_sel_all_dates_2 = df_sel_all_dates.filter(cols_xyz, axis=1)
+    #st.dataframe(df_sel_all_dates_2)
+    # fig = plt.figure()
+    
+    # plt.scatter(df_sel_all_dates, y = df_sel_all_dates['wRC+'], x = df_sel_all_dates['Date'])
+    # st.write(fig)
+    #fig = plt.figure()
+    # sns.scatterplot(df_sel_all_dates, y = df_sel_all_dates.ISO) 
+    # st.pyplot(fig)   
+    # df_sel_date_12['Days'] = df_date_12.Days[0]
+    # df_sel_date_12.set_index('Days', inplace=True)
+    # df_sel_date_max['Days'] = df_date_max.Days[0]
+    # df_sel_date_max.set_index('Days', inplace=True)
+    # #df_sel_curr = df_raw2.loc[[sel_id]]
+    # frames = [df_sel_date_6_split, df_sel_date_12_split] #df_sel_date_max]
+    
+    if len(frames) > 0: 
+        result = pd.concat(frames)
+        st.table(result)
+    
+    st.dataframe(df_sel_all_dates_2)
 
 
 
-#st.dataframe(df_splits_2.sort_values(by=['PA'], ascending = False))
 
 
-# search_input = st.text_input(label='Search for a player')
-# search_submit = st.checkbox('Submit search')
+
+
+
+#### SEARCH FUNCTION ###################################################
+
+search_input = st.text_input(label='Search for a player')
+search_submit = st.checkbox('Submit search')
 
 #@st.cache(allow_output_mutation=True)
 def player_search(search_input):
     if player_search != '':
         df_splits_search = df_splits[df_splits['Name'].str.contains(search_input)]
-        df_total_search = df_recent[df_recent['Name'].str.contains(search_input)]
+        df_total_search = df_date_max[df_date_max['Name'].str.contains(search_input)]
         df_total_search = df_total_search.filter(cols_split_display, axis=1)
 
 if search_submit:
@@ -383,7 +357,7 @@ if search_submit:
     #sel_row = grid_table_search["selected_rows"]
     
     st.write('Search results season totals:')
-    df_total_search = df_recent[df_recent['Name'].str.contains(search_input)]
+    df_total_search = df_date_max[df_date_max['Name'].str.contains(search_input)]
     df_total_search = df_total_search.filter(cols_split_display, axis=1)
     gdsearch_total = GridOptionsBuilder.from_dataframe(df_total_search)
     gdsearch_total.configure_pagination(enabled=True)
@@ -526,23 +500,23 @@ cols_slash = [
 #     #sel_days = df_sel['Days'].iloc[0]
 #     #st.subheader("Last " + sel_days + " days")
 #     # sel_id = df_sel.id[0]
-#     # df_sel_recent = df_recent.loc[[sel_id]]
-#     # df_sel_L7 = df_L7.loc[[sel_id]]
-#     # df_sel_L7['Days'] = df_L7.Days[0]
-#     # df_sel_L7.set_index('Days', inplace=True)
-#     # df_sel_L14 = df_L14.loc[[sel_id]]
-#     # df_sel_L14['Days'] = df_L14.Days[0]
-#     # df_sel_L14.set_index('Days', inplace=True)
-#     # df_sel_recent['Days'] = df_recent.Days[0]
-#     # df_sel_recent.set_index('Days', inplace=True)
+#     # df_sel_date_max = df_date_max.loc[[sel_id]]
+#     # df_sel_date_6 = df_date_6.loc[[sel_id]]
+#     # df_sel_date_6['Days'] = df_date_6.Days[0]
+#     # df_sel_date_6.set_index('Days', inplace=True)
+#     # df_sel_date_12 = df_date_12.loc[[sel_id]]
+#     # df_sel_date_12['Days'] = df_date_12.Days[0]
+#     # df_sel_date_12.set_index('Days', inplace=True)
+#     # df_sel_date_max['Days'] = df_date_max.Days[0]
+#     # df_sel_date_max.set_index('Days', inplace=True)
 #     # #df_sel_curr = df_raw2.loc[[sel_id]]
-#     # frames = [df_sel_L7, df_sel_L14, df_sel_recent]
+#     # frames = [df_sel_date_6, df_sel_date_12, df_sel_date_max]
 #     # result = pd.concat(frames)
 #     # st.write('Last 7')
-#     # st.table(df_sel_L7)
+#     # st.table(df_sel_date_6)
 #     # st.write('Last 14')
-#     # st.table(df_sel_L14)
-#     # st.write('Last ' + str(df_recent.Days[0]))
+#     # st.table(df_sel_date_12)
+#     # st.write('Last ' + str(df_date_max.Days[0]))
 #     #st.table(result)
     
 #     # st.write('Level Total')
@@ -552,35 +526,35 @@ cols_slash = [
 #     sel_id = df_sel.id[0]
 
 
-# # if sel_id in df_L7.index.values:
-# #     df_sel_L7 = df_L7.loc[[sel_id]]
-# #     df_sel_L7['Days'] = df_L7['Days'][0]
-# #     df_sel_L7['Days'] = 'Last ' + df_sel_L7['Days'].astype(str)
-# #     df_sel_L7.set_index('Days', inplace=True)
+# # if sel_id in df_date_6.index.values:
+# #     df_sel_date_6 = df_date_6.loc[[sel_id]]
+# #     df_sel_date_6['Days'] = df_date_6['Days'][0]
+# #     df_sel_date_6['Days'] = 'Last ' + df_sel_date_6['Days'].astype(str)
+# #     df_sel_date_6.set_index('Days', inplace=True)
 # # else: 
-# #     df_sel_L7 = pd.DataFrame({}, columns=df_L7.columns, index = ['Days'])
+# #     df_sel_date_6 = pd.DataFrame({}, columns=df_date_6.columns, index = ['Days'])
 
-# # if sel_id in df_L14.index.values:
-# #     df_sel_L14 = df_L14.loc[[sel_id]]
-# #     df_sel_L14['Days'] = df_L14['Days'][0]
-# #     df_sel_L14['Days'] = 'Last ' + df_sel_L14['Days'].astype(str)
-# #     df_sel_L14.set_index('Days', inplace=True)
+# # if sel_id in df_date_12.index.values:
+# #     df_sel_date_12 = df_date_12.loc[[sel_id]]
+# #     df_sel_date_12['Days'] = df_date_12['Days'][0]
+# #     df_sel_date_12['Days'] = 'Last ' + df_sel_date_12['Days'].astype(str)
+# #     df_sel_date_12.set_index('Days', inplace=True)
 # # else:
-# #     df_sel_L14 = pd.DataFrame({}, columns=df_L14.columns, index = ['Days'])
+# #     df_sel_date_12 = pd.DataFrame({}, columns=df_date_12.columns, index = ['Days'])
 
-# # if sel_id in df_recent.index.values:
-# #     df_sel_recent = df_recent.loc[[sel_id]]
-# #     df_sel_recent['Days'] = df_recent['Days'][0]
-# #     df_sel_recent['Days'] = 'Last ' + df_sel_recent['Days'].astype(str)
-# #     df_sel_recent.set_index('Days', inplace=True)
+# # if sel_id in df_date_max.index.values:
+# #     df_sel_date_max = df_date_max.loc[[sel_id]]
+# #     df_sel_date_max['Days'] = df_date_max['Days'][0]
+# #     df_sel_date_max['Days'] = 'Last ' + df_sel_date_max['Days'].astype(str)
+# #     df_sel_date_max.set_index('Days', inplace=True)
 # # else:
-# #     df_sel_recent = pd.DataFrame({}, columns=df_recent.columns, index = ['Days'])
+# #     df_sel_date_max = pd.DataFrame({}, columns=df_date_max.columns, index = ['Days'])
 
 # # if sel_id in allidx:
 # #     frames = [
-# #         df_sel_L7,
-# #         df_sel_L14,
-# #         df_sel_recent
+# #         df_sel_date_6,
+# #         df_sel_date_12,
+# #         df_sel_date_max
 # #         ]
 # #     result = pd.concat(frames)
 # #     result2 = result.drop(columns=['Name/Org', 'Age', 'Level', 'id'])
