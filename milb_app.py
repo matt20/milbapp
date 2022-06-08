@@ -148,6 +148,7 @@ df_hist_recent = df_hist[df_hist['Season'] > 2014]
 
 levels = df_raw['Level'].unique()
 
+#st.caption('ALL DATA COURTESY OF FANGRAPHS')
 #st.dataframe(df_raw)
 
 ################################################################################################
@@ -512,7 +513,7 @@ def get_pct_disp(met):
 if sel_row:
     df_sel = pd.DataFrame(sel_row)
     st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
-    st.caption('Last ' + days_back_var + ' days')
+    st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA)')
     
     sel_id = df_sel.IndexSplit2[0]
     sel_pid = df_sel.PlayerID[0]
@@ -742,6 +743,7 @@ if sel_row:
         #sel_row = grid_table["selected_rows"]
         
     with st.expander("Show historical comps"):
+        st.caption('Work in progress, currently shows stints of >70 PA where a player had a higher ISO, K%, and BB% at the same age or younger (data 2006-2021)')
         sel_iso = df_sel['ISO'].iloc[0]
         sel_kpct = df_sel['K%'].iloc[0]
         sel_bbpct = df_sel['BB%'].iloc[0]
@@ -778,4 +780,3 @@ if sel_row:
             enable_enterprise_modules=True,
             theme = "blue"
         )
-
