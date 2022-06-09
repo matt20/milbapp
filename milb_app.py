@@ -263,7 +263,7 @@ splits_pa_max = int(df_splits['PA'].max())
 
 #### SIDEBAR ###########################################################
 df_choice = ['Time Splits', 'Season Totals']
-input_df = st.sidebar.selectbox('Select data', df_choice)
+input_df = st.sidebar.selectbox('Select data', df_choice, help='If you need more space for the table, click the X on the sidebar')
 input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
 input_pa_min = st.sidebar.slider('Min PA:', 1, splits_pa_max, 20)
 input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
@@ -372,8 +372,8 @@ else:
                             theme='blue')
         sel_row = grid_table["selected_rows"]
     else:
-        st.caption('Last ' + days_back_var + ' days')
         st.caption('Select a player to pull up their profile or use the search feature to find a specific player by name')
+        st.write('Last ' + days_back_var + ' days')
         #######################################################################
         #### --- THE FIRST DATA TABLE ----------------------------------- #####
         # configure grid options for Ag-Grid table
@@ -526,13 +526,13 @@ if sel_row:
     df_sel = pd.DataFrame(sel_row)    
     sel_id = df_sel.IndexSplit2[0]
     sel_pid = df_sel.PlayerID[0]    
-    empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
     st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
     sel_id_max = sel_id + '-' + date_max
     df_sel_date_max = df_date_max.loc[[sel_id_max]]
     df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
     wrcplus_display = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int))
     #st.write(empty_df)
+    empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
     if empty_df == True:
         st.write('PlayerID not found in the stats as of the selected start date. Likely because they were promoted to MLB and their Player ID changed. A fix for this is in the works.')
         st.caption('Season Totals')
