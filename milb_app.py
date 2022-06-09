@@ -181,7 +181,7 @@ date_15 = dates_choice_end[15]
 df_date_15 = get_df_filter(date_15)
 
 ## COLUMNS AND SEARCH ############################################################################
-with st.expander("Show time splits parameters"):
+with st.expander("Show time splits parameters and search bar"):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -366,14 +366,14 @@ else:
         gridoptions1 = gb1.build()
         grid_table = AgGrid(df_date_max_2, gridOptions=gridoptions1,
                             update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-                            height=435,
+                            height=685,
                             allow_unsafe_jscode=True,
                             enable_enterprise_modules=True,
                             theme='blue')
         sel_row = grid_table["selected_rows"]
     else:
         st.caption('Last ' + days_back_var + ' days')
-        st.caption('Select a player to pull up their profile')
+        st.caption('Select a player to pull up their profile or use the search feature to find a specific player by name')
         #######################################################################
         #### --- THE FIRST DATA TABLE ----------------------------------- #####
         # configure grid options for Ag-Grid table
@@ -384,7 +384,7 @@ else:
         gridoptions2 = gb2.build()
         grid_table = AgGrid(df_splits_2, gridOptions=gridoptions2,
                             update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-                            height=435,
+                            height=685,
                             allow_unsafe_jscode=True,
                             enable_enterprise_modules=True,
                             theme='blue')
@@ -427,7 +427,7 @@ def get_time_graph_bbkswstr(df):
     ax.plot("PA", "SwStr%", data = df, label='_SwStr%')
     ax.set_xlabel('PA')
     ax.legend(frameon=False, loc = 'best', ncol=2)
-    plt.ylim([.0, .35])
+    plt.ylim([.0, .400])
     output = st.write(fig)
     return output
 
@@ -528,15 +528,39 @@ if sel_row:
     sel_pid = df_sel.PlayerID[0]    
     empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
     st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
+    sel_id_max = sel_id + '-' + date_max
+    df_sel_date_max = df_date_max.loc[[sel_id_max]]
+    df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
+    wrcplus_display = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int))
     #st.write(empty_df)
     if empty_df == True:
         st.write('PlayerID not found in the stats as of the selected start date. Likely because they were promoted to MLB and their Player ID changed. A fix for this is in the works.')
+        st.caption('Season Totals')
+        met1, met2, met3, met4 = st.columns(4)
+        met1.metric(label = 'PA', value = (df_sel_date_max_2['PA'].iloc[0]).astype(int), delta = None)
+        babip_display = get_met_disp("BABIP")
+        met1.metric(label = 'BABIP', value = babip_display, delta = None)
+        met1.metric(label = 'wRC+', value = wrcplus_display, delta = None)
+        avg_display = get_met_disp("AVG")
+        met2.metric(label = 'HR', value = (df_sel_date_max_2['HR'].iloc[0]).astype(int), delta = None)
+        met2.metric(label = 'AVG', value = avg_display, delta = None)
+        k_display = get_pct_disp("K%")
+        met2.metric(label = 'K%', value = k_display, delta = None)
+        met3.metric(label = 'SB', value = (df_sel_date_max_2['SB'].iloc[0]).astype(int), delta = None)
+        obp_display = get_met_disp("OBP")
+        met3.metric(label = 'OBP', value = obp_display, delta = None)
+        bb_display = get_pct_disp("BB%")
+        met3.metric(label = 'BB%', value = bb_display, delta = None)
+        met4.metric(label = 'CS', value = (df_sel_date_max_2['CS'].iloc[0]).astype(int), delta = None)
+        slg_display = get_met_disp("SLG")
+        met4.metric(label = 'SLG', value = slg_display, delta = None)
+        iso_display = get_met_disp("ISO")
+        met4.metric(label = 'ISO', value = iso_display, delta = None)
     else:
         st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA) at Level: ' + (df_sel['Level'].iloc[0]))
         st.caption('The large number is the season total, the delta is the raw change in that category during the selected period')
-        sel_id_max = sel_id + '-' + date_max
-        df_sel_date_max = df_date_max.loc[[sel_id_max]]
-        df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
+        
+
         sel_id_start = sel_id + '-' + date_start
         df_sel_date_start = df_start.loc[[sel_id_start]]
         df_sel_date_start_2 = df_sel_date_start.filter(cols_xyz, axis=1)
@@ -551,13 +575,16 @@ if sel_row:
 
         # for col, met in enumerate(metrics):
         #     cols[row].metric(met)
-        
 
-        
+        #colwrc1 = st.columns(1)
+
         #### SETTING UP THE METRICS ###################
         met1, met2, met3, met4 = st.columns(4)
         
         ## METRICS COL 1 #########
+        met1.metric(label = 'PA',
+                    value = str((df_sel_date_max_2['PA'].iloc[0]).astype(int)),
+                    delta = (str((((df_sel_date_max_2['PA'].iloc[0]).astype(int) - (df_sel_date_start_2['PA'].iloc[0]).astype(int))))) + ' PA')
         babip_display = get_met_disp("BABIP")
         #met_babip_disp = ((((df_sel['BABIP'].iloc[0] - df_sel_date_max_2['BABIP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
         babip_delta = get_sel_met_delta("BABIP")
@@ -586,6 +613,9 @@ if sel_row:
             )   
         
         ## METRICS COL 2 #########
+        met2.metric(label = 'wRC+',
+                    value = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int)),
+                    delta = (str((((df_sel_date_max_2['wRC+'].iloc[0]).astype(int) - (df_sel_date_start_2['wRC+'].iloc[0]).astype(int))))) + ' points')
         avg_display = get_met_disp("AVG")
         #met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
         avg_delta = get_sel_met_delta("AVG")
@@ -613,9 +643,12 @@ if sel_row:
             )
             
         ## METRICS COL 3 #########
+        met3.metric(label = 'SB',
+                    value = str((df_sel_date_max_2['SB'].iloc[0]).astype(int)),
+                    delta = (str((((df_sel_date_max_2['SB'].iloc[0]).astype(int) - (df_sel_date_start_2['SB'].iloc[0]).astype(int))))) + ' bags')
         obp_display = get_met_disp("OBP")
         obp_delta = get_sel_met_delta("OBP")    
-        met_obp_disp = ((((df_sel['OBP'].iloc[0] - df_sel_date_max_2['OBP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+        #met_obp_disp = ((((df_sel['OBP'].iloc[0] - df_sel_date_max_2['OBP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
         met3.metric(
             label = "OBP", 
             value = obp_display,
@@ -639,6 +672,9 @@ if sel_row:
         )
         
         ## METRICS COL 4 #########
+        met4.metric(label = 'HR',
+                    value = str((df_sel_date_max_2['HR'].iloc[0]).astype(int)),
+                    delta = (str((((df_sel_date_max_2['HR'].iloc[0]).astype(int) - (df_sel_date_start_2['HR'].iloc[0]).astype(int))))) + ' dingers')
         slg_display = get_met_disp("SLG")
         slg_delta = get_sel_met_delta("SLG")    
         met4.metric(
@@ -685,8 +721,8 @@ if sel_row:
             # get_time_graph('SwStr%', df_sel_all_dates_2, .05, .25)
             # get_time_graph('BB%', df_sel_all_dates_2, .0, .250)
             # #get_time_graph('SB', df_sel_all_dates_2, 0, 30)
+            get_time_graph_quad(df_sel_all_dates_2)
             get_time_graph_hrsb(df_sel_all_dates_2, 0, 15)
-            get_time_graph_quad(df_sel_all_dates_2)     
             # fig, axes = plt.subplots(2,2)
             # # just plot things on each individual axes
             # x = df_sel_all_dates_2['PA']
