@@ -404,11 +404,11 @@ def get_time_graph(yvar, df, ymin, ymax):
 def get_time_graph_hrsb(df, ymin, ymax):
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.scatter("PA", "HR", data = df)
-    ax.plot("PA", "HR", data = df)
+    ax.plot("PA", "HR", data = df, label='_HR')
     ax.scatter("PA", "SB", data = df)
-    ax.plot("PA", "SB", data = df)
+    ax.plot("PA", "SB", data = df, label='_SB')
     ax.set_xlabel('PA')
-    ax.set_ylabel('HR (Blue) | SB (Orange)')
+    ax.legend(frameon=False, loc = 'best', ncol=2)
     plt.ylim([ymin, ymax])
     output = st.write(fig)
     return output
@@ -505,10 +505,15 @@ def get_met_disp(met):
 
 def get_pct_disp(met):
     disp = (((df_sel_date_max_2[met].iloc[0])*100).round(1)).astype(str) + '%'
-    return disp 
+    return disp
 
-# def get_delta_disp(met):
-#     met_met_disp = ((((df_sel['ISO'].iloc[0] - df_sel_date_max_2['ISO'].iloc[0])*100).round(3)).astype(str) + ' points')
+def get_sel_met_delta(met):
+    delta = (((df_sel_date_max_2[met].iloc[0] - df_sel_date_start_2[met].iloc[0])*1000).astype(int).astype(str) + ' points')    
+    return delta
+
+def get_sel_pct_delta(met):
+    delta = (((df_sel_date_max_2[met].iloc[0] - df_sel_date_start_2[met].iloc[0])*100).round(1)).astype(str) + '%'
+    return delta
 
 #### SETTING UP THE SELECTION ###########################################
 if sel_row:
@@ -523,6 +528,10 @@ if sel_row:
     df_sel_date_max = df_date_max.loc[[sel_id_max]]
     df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
     
+    sel_id_start = sel_id + '-' + date_start
+    df_sel_date_start = df_start.loc[[sel_id_start]]
+    df_sel_date_start_2 = df_sel_date_start.filter(cols_xyz, axis=1)
+    # st.dataframe(df_sel_date_start_2)
     # metrics = [
     # ]
     # n_rows = 3
@@ -539,98 +548,108 @@ if sel_row:
 
     ## METRICS COL 1 #########
     babip_display = get_met_disp("BABIP")
-    met_babip_disp = ((((df_sel['BABIP'].iloc[0] - df_sel_date_max_2['BABIP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    #met_babip_disp = ((((df_sel['BABIP'].iloc[0] - df_sel_date_max_2['BABIP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    babip_delta = get_sel_met_delta("BABIP")
     met1.metric(
         label = "BABIP", 
         value = babip_display,
-        delta = met_babip_disp 
+        delta = babip_delta #met_babip_disp 
         )
+    
     #ops_display = get_met_disp("OPS")
-    met_ops_disp = ((((df_sel['OPS'].iloc[0] - df_sel_date_max_2['OPS'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    #met_ops_disp = ((((df_sel['OPS'].iloc[0] - df_sel_date_max_2['OPS'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    ops_delta = get_sel_met_delta("OPS")
     met1.metric(
         label = "OPS", 
         value = df_sel['OPS'].iloc[0],
-        delta = met_ops_disp
+        delta = ops_delta
         )
+    
     ld_display = get_pct_disp("LD%")
+    ld_delta = get_sel_pct_delta("LD%")
     met1.metric(
         label = "LD%", 
-        value = ld_display#,
-        # delta = ((df_sel['LD%'].iloc[0] - df_sel_date_max_2['LD%'].iloc[0])*100).round(1),
-        # delta_color = "inverse"
+        value = ld_display,
+        delta = ld_delta
+        #((df_sel['LD%'].iloc[0] - df_sel_date_max_2['LD%'].iloc[0])*100).round(1),
         )   
     
     ## METRICS COL 2 #########
     avg_display = get_met_disp("AVG")
-    met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    #met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    avg_delta = get_sel_met_delta("AVG")
     met2.metric(
         label = "AVG", 
         value = avg_display,
-        delta = met_avg_disp
+        delta = avg_delta
         )
     
     k_display = get_pct_disp("K%")
+    k_delta = get_sel_pct_delta("K%")
     met2.metric(
         label = "K%", 
         value = k_display,
-        delta = ((df_sel['K%'].iloc[0] - df_sel_date_max_2['K%'].iloc[0])*100).round(1),
+        delta = k_delta,
         delta_color = "inverse"
         )
+    
     gb_display = get_pct_disp("GB%")
+    gb_delta = get_sel_pct_delta("GB%")
     met2.metric(
         label = "GB%", 
-        value = gb_display#,
-        #delta = ((df_sel['GB%'].iloc[0] - df_sel_date_max_2['GB%'].iloc[0])*100).round(1)
+        value = gb_display,
+        delta = gb_delta
         )
           
 
     ## METRICS COL 3 #########
     obp_display = get_met_disp("OBP")
+    obp_delta = get_sel_met_delta("OBP")    
     met_obp_disp = ((((df_sel['OBP'].iloc[0] - df_sel_date_max_2['OBP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
     met3.metric(
         label = "OBP", 
         value = obp_display,
-        delta = met_obp_disp
+        delta = obp_delta
         )
+    
     bb_display = get_pct_disp("BB%")
+    bb_delta = get_sel_pct_delta("BB%")    
     met3.metric(
         label = "BB%", 
         value = bb_display,
-        delta = ((df_sel['BB%'].iloc[0] - df_sel_date_max_2['BB%'].iloc[0])*100).round(1)
+        delta = bb_delta
         )    
+    
     fb_display = get_pct_disp("FB%")
+    fb_delta = get_sel_pct_delta("FB%")    
     met3.metric(
         label = "FB%", 
-        value = fb_display#,
-        #delta = ((df_sel['FB%'].iloc[0] - df_sel_date_max_2['FB%'].iloc[0])*100).round(1)
-        )
-
-    # met3.metric(
-    #     label = "HR", 
-    #     value = str(df_sel_date_max_2['HR'].iloc[0]),
-    #     delta = str(df_sel['HR'].iloc[0])
-    #     )  
-
+        value = fb_display,
+        delta = fb_delta
+    )
     ## METRICS COL 4 #########
     slg_display = get_met_disp("SLG")
-    met_slg_disp = ((((df_sel['SLG'].iloc[0] - df_sel_date_max_2['SLG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    slg_delta = get_sel_met_delta("SLG")    
     met4.metric(
         label = "SLG", 
         value = slg_display,
-        delta = met_slg_disp
+        delta = slg_delta
         )
+    
     iso_display = get_met_disp("ISO")
-    met_iso_delta = ((((df_sel['ISO'].iloc[0] - df_sel_date_max_2['ISO'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+    iso_delta = get_sel_met_delta("ISO")    
     met4.metric(
         label = "ISO", 
         value = iso_display,
-        delta = met_iso_delta
+        delta = iso_delta
         )
+    
     hrfb_display = get_pct_disp("HR/FB")
+    hrfb_delta = get_sel_pct_delta("HR/FB")    
     met4.metric(
         label = "HR/FB", 
-        value = hrfb_display#,
-        #delta = ((df_sel['FB%'].iloc[0] - df_sel_date_max_2['FB%'].iloc[0])*100).round(1)
+        value = hrfb_display,
+        delta = hrfb_delta
         )
     
   
