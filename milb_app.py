@@ -183,7 +183,7 @@ df_date_15 = get_df_filter(date_15)
 
 ## COLUMNS AND SEARCH ############################################################################
 with st.expander("Show time splits parameters and search bar"):
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns((1,1,2))
 
     with col1:
         date_start = st.selectbox(
@@ -199,13 +199,13 @@ with st.expander("Show time splits parameters and search bar"):
 
         date_end_dt = datetime.strptime(date_end, '%Y-%m-%d') #string to date
         
-    with col3:
-        days_back = st.selectbox(
-            'How many days back?',
-            (days_back_choice))
-        days_submit = st.checkbox('Use days instead of date range')
+    # with col3:
+    #     # days_back = st.selectbox(
+    #     #     'How many days back?',
+    #     #     (days_back_choice))
+    #     # days_submit = st.checkbox('Use days instead of date range')
         
-    with col4:
+    with col3:
         #### SEARCH FUNCTION ###################################################
         # with st.expander("Show search bar"):
         search_input = st.text_input(label='Search for a player (hit enter then click submit search')
@@ -222,12 +222,15 @@ def df_to_int(df):
         df[col] = df[col].astype('int')
         return pd.DataFrame(df)
 
-if days_submit:
-    df_start = get_df_filter_days(days_back)
-    df_end = get_df_filter(date_max)
-else:
-    df_start = get_df_filter(date_start)
-    df_end = get_df_filter(date_end)
+# if days_submit:
+#     df_start = get_df_filter_days(days_back)
+#     df_end = get_df_filter(date_max)
+# else:
+#     df_start = get_df_filter(date_start)
+#     df_end = get_df_filter(date_end)
+    
+df_start = get_df_filter(date_start)
+df_end = get_df_filter(date_end)
 
 days_back_var = str(df_start.DaysBack[0])
 
@@ -577,9 +580,9 @@ if sel_row:
     else:
         st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA) at Level: ' + (df_sel['Level'].iloc[0]))
         st.caption('The large number is the season total, the delta is the raw change in that category during the selected period')
-        st.metric(label = 'Example',
-                  value = str('Season Total'),
-                  delta = str('Season Total - Season Total X days ago'))
+        # st.metric(label = 'Example',
+        #           value = str('Season Total'),
+        #           delta = str('Season Total - Season Total X days ago'))
 
         sel_id_start = sel_id + '-' + date_start
         df_sel_date_start = df_start.loc[[sel_id_start]]
@@ -619,7 +622,7 @@ if sel_row:
         ops_delta = get_sel_met_delta("OPS")
         met1.metric(
             label = "OPS", 
-            value = df_sel['OPS'].iloc[0],
+            value = df_sel_date_max_2['OPS'].iloc[0],
             delta = ops_delta
             )
         
