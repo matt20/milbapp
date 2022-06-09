@@ -351,7 +351,7 @@ if search_submit:
     grid_table_search1 = AgGrid(df_splits_search, gridOptions=gridoptions_search,
                         update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
                         allow_unsafe_jscode=True,
-                        height = 150,
+                        height = 200,
                         enable_enterprise_modules = True,
                         theme='blue')
     sel_row = grid_table_search1["selected_rows"]
@@ -367,7 +367,7 @@ if search_submit:
     grid_table_search2 = AgGrid(df_total_search, gridOptions=gridoptions_search_total,
                         #update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
                         allow_unsafe_jscode=True,
-                        height = 150,
+                        height = 200,
                         enable_enterprise_modules = True,
                         theme='blue')
     #sel_row = grid_table_search["selected_rows"]
