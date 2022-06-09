@@ -264,8 +264,8 @@ splits_pa_max = int(df_splits['PA'].max())
 #### SIDEBAR ###########################################################
 df_choice = ['Time Splits', 'Season Totals']
 input_df = st.sidebar.selectbox('Select data', df_choice)
-input_age = st.sidebar.slider('Max Age:', 16, 32, 20)
-input_pa_min = st.sidebar.slider('Min PA (Splits):', 1, splits_pa_max, 10)
+input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
+input_pa_min = st.sidebar.slider('Min PA (Splits):', 1, splits_pa_max, 20)
 input_pa_max = st.sidebar.slider('Max PA (Splits):', 30, splits_pa_max, splits_pa_max)
 input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
