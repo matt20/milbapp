@@ -29,7 +29,7 @@ with st.spinner('Loading data...'):
     df_hist = load_df_hist()
     df_hist['PlayerID'] = df_hist.index
     
-@st.cache(allow_output_mutation=True)
+@st.cache(allow_output_mutation=True, ttl = ((60*60)*24))
 def load_df_raw():
     URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
     data2 = pd.read_csv(URL2, index_col = 'IndexNew')
@@ -155,7 +155,7 @@ df_hist_recent = df_hist[df_hist['Season'] > 2014]
 levels = df_raw['Level'].unique()
 
 #st.caption('ALL DATA COURTESY OF FANGRAPHS')
-st.dataframe(df_raw)
+#st.dataframe(df_raw)
 
 ################################################################################################
 #### USER INPUT FOR DATES ######################################################################
