@@ -29,8 +29,8 @@ with st.spinner('Loading data...'):
     df_hist = load_df_hist()
     df_hist['PlayerID'] = df_hist.index
 
-# @st.cache(allow_output_mutation=True)
-@st.experimental_singleton
+@st.cache(allow_output_mutation=True)
+# @st.experimental_singleton
 def load_df_raw():
     URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
     data2 = pd.read_csv(URL2, index_col = 'IndexNew')
@@ -283,14 +283,14 @@ input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 st.sidebar.caption('wRC+ for Season Totals only')
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
 input_levels = st.sidebar.multiselect('Levels',levels,levels)
-if st.sidebar.button("Check for updated data"):
-    if date_today_str == date_max:
-        st.success('Data up to date')
-        st.balloons()
-    # Clears all singleton caches:
-    else:
-        st.experimental_singleton.clear()
-        st.success('Data should now be updated. If it has not yet updated, please let me know.')
+# if st.sidebar.button("Check for updated data"):
+#     if date_today_str == date_max:
+#         st.success('Data up to date')
+#         st.balloons()
+#     # Clears all singleton caches:
+#     else:
+#         st.experimental_singleton.clear()
+#         st.success('Data should now be updated. If it has not yet updated, please let me know.')
 
 #### CALCULATING THE SPLIT RATIO STATS #########################################################
 def calc_split_stats(df):
