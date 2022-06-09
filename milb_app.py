@@ -265,11 +265,12 @@ splits_pa_max = int(df_splits['PA'].max())
 df_choice = ['Time Splits', 'Season Totals']
 input_df = st.sidebar.selectbox('Select data', df_choice)
 input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
-input_pa_min = st.sidebar.slider('Min PA (Splits):', 1, splits_pa_max, 20)
-input_pa_max = st.sidebar.slider('Max PA (Splits):', 30, splits_pa_max, splits_pa_max)
+input_pa_min = st.sidebar.slider('Min PA:', 1, splits_pa_max, 20)
+input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
 input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
 input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
+st.sidebar.caption('wRC+ for Season Totals only')
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
 input_levels = st.sidebar.multiselect('Levels',levels,levels)
 
@@ -354,6 +355,7 @@ else:
         st.caption('Season Totals')
         df_date_max_2 = df_date_max.filter(cols_xyz, axis=1)
         df_date_max_2 = filter_by_input(df_date_max_2)
+        df_date_max_2 = df_date_max_2[(df_date_max_2['wRC+'] >= input_wrcplus)]
         ######################################################################
         ### --- THE FIRST DATA TABLE ----------------------------------- #####
         #configure grid options for Ag-Grid table
@@ -515,288 +517,295 @@ def get_sel_pct_delta(met):
     delta = (((df_sel_date_max_2[met].iloc[0] - df_sel_date_start_2[met].iloc[0])*100).round(1)).astype(str) + '%'
     return delta
 
+def get_len_ind(df):
+    return len(df.index) == 0
+
+
 #### SETTING UP THE SELECTION ###########################################
 if sel_row:
-    df_sel = pd.DataFrame(sel_row)
-    st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
-    st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA) at Level: ' + (df_sel['Level'].iloc[0]))
-    
+    df_sel = pd.DataFrame(sel_row)    
     sel_id = df_sel.IndexSplit2[0]
-    sel_pid = df_sel.PlayerID[0]
-    
-    sel_id_max = sel_id + '-' + date_max
-    df_sel_date_max = df_date_max.loc[[sel_id_max]]
-    df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
-    
-    sel_id_start = sel_id + '-' + date_start
-    df_sel_date_start = df_start.loc[[sel_id_start]]
-    df_sel_date_start_2 = df_sel_date_start.filter(cols_xyz, axis=1)
-    # st.dataframe(df_sel_date_start_2)
-    # metrics = [
-    # ]
-    # n_rows = 3
-    # rows = [st.container() for _ in range(n_rows)]
-    # n_cols = 4
-    # cols_per_row = [r.columns(n_cols) for r in rows]
-    # cols = [column for row in cols_per_row for column in row]
+    sel_pid = df_sel.PlayerID[0]    
+    empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
+    st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
+    #st.write(empty_df)
+    if empty_df == True:
+        st.write('PlayerID not found in the stats as of the selected start date. Likely because they were promoted to MLB and their Player ID changed. A fix for this is in the works.')
+    else:
+        st.caption('Last ' + days_back_var + ' days ' + '(' + (df_sel['PA'].iloc[0]).astype(str) + ' PA) at Level: ' + (df_sel['Level'].iloc[0]))
+        st.caption('The large number is the season total, the delta is the raw change in that category during the selected period')
+        sel_id_max = sel_id + '-' + date_max
+        df_sel_date_max = df_date_max.loc[[sel_id_max]]
+        df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
+        sel_id_start = sel_id + '-' + date_start
+        df_sel_date_start = df_start.loc[[sel_id_start]]
+        df_sel_date_start_2 = df_sel_date_start.filter(cols_xyz, axis=1)
+        # st.dataframe(df_sel_date_start_2)
+        # metrics = [
+        # ]
+        # n_rows = 3
+        # rows = [st.container() for _ in range(n_rows)]
+        # n_cols = 4
+        # cols_per_row = [r.columns(n_cols) for r in rows]
+        # cols = [column for row in cols_per_row for column in row]
 
-    # for col, met in enumerate(metrics):
-    #     cols[row].metric(met)
-    
-    #### SETTING UP THE METRICS ###################
-    met1, met2, met3, met4 = st.columns(4)
-
-    ## METRICS COL 1 #########
-    babip_display = get_met_disp("BABIP")
-    #met_babip_disp = ((((df_sel['BABIP'].iloc[0] - df_sel_date_max_2['BABIP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
-    babip_delta = get_sel_met_delta("BABIP")
-    met1.metric(
-        label = "BABIP", 
-        value = babip_display,
-        delta = babip_delta #met_babip_disp 
-        )
-    
-    #ops_display = get_met_disp("OPS")
-    #met_ops_disp = ((((df_sel['OPS'].iloc[0] - df_sel_date_max_2['OPS'].iloc[0])*1000).astype(int)).astype(str) + ' points')
-    ops_delta = get_sel_met_delta("OPS")
-    met1.metric(
-        label = "OPS", 
-        value = df_sel['OPS'].iloc[0],
-        delta = ops_delta
-        )
-    
-    ld_display = get_pct_disp("LD%")
-    ld_delta = get_sel_pct_delta("LD%")
-    met1.metric(
-        label = "LD%", 
-        value = ld_display,
-        delta = ld_delta
-        #((df_sel['LD%'].iloc[0] - df_sel_date_max_2['LD%'].iloc[0])*100).round(1),
-        )   
-    
-    ## METRICS COL 2 #########
-    avg_display = get_met_disp("AVG")
-    #met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
-    avg_delta = get_sel_met_delta("AVG")
-    met2.metric(
-        label = "AVG", 
-        value = avg_display,
-        delta = avg_delta
-        )
-    
-    k_display = get_pct_disp("K%")
-    k_delta = get_sel_pct_delta("K%")
-    met2.metric(
-        label = "K%", 
-        value = k_display,
-        delta = k_delta,
-        delta_color = "inverse"
-        )
-    
-    gb_display = get_pct_disp("GB%")
-    gb_delta = get_sel_pct_delta("GB%")
-    met2.metric(
-        label = "GB%", 
-        value = gb_display,
-        delta = gb_delta
-        )
-          
-
-    ## METRICS COL 3 #########
-    obp_display = get_met_disp("OBP")
-    obp_delta = get_sel_met_delta("OBP")    
-    met_obp_disp = ((((df_sel['OBP'].iloc[0] - df_sel_date_max_2['OBP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
-    met3.metric(
-        label = "OBP", 
-        value = obp_display,
-        delta = obp_delta
-        )
-    
-    bb_display = get_pct_disp("BB%")
-    bb_delta = get_sel_pct_delta("BB%")    
-    met3.metric(
-        label = "BB%", 
-        value = bb_display,
-        delta = bb_delta
-        )    
-    
-    fb_display = get_pct_disp("FB%")
-    fb_delta = get_sel_pct_delta("FB%")    
-    met3.metric(
-        label = "FB%", 
-        value = fb_display,
-        delta = fb_delta
-    )
-    ## METRICS COL 4 #########
-    slg_display = get_met_disp("SLG")
-    slg_delta = get_sel_met_delta("SLG")    
-    met4.metric(
-        label = "SLG", 
-        value = slg_display,
-        delta = slg_delta
-        )
-    
-    iso_display = get_met_disp("ISO")
-    iso_delta = get_sel_met_delta("ISO")    
-    met4.metric(
-        label = "ISO", 
-        value = iso_display,
-        delta = iso_delta
-        )
-    
-    hrfb_display = get_pct_disp("HR/FB")
-    hrfb_delta = get_sel_pct_delta("HR/FB")    
-    met4.metric(
-        label = "HR/FB", 
-        value = hrfb_display,
-        delta = hrfb_delta
-        )
-    
-  
+        # for col, met in enumerate(metrics):
+        #     cols[row].metric(met)
         
-    df_sel_all_dates = df_raw[df_raw['PlayerID'].str.contains(sel_pid)]
-    df_sel_all_dates = df_sel_all_dates.sort_values(by=['G'],ascending=False)
-    df_sel_all_dates_2 = df_sel_all_dates.filter(cols_xyz, axis=1)
-    df_sel_all_dates_2 = df_sel_all_dates_2.reset_index()    
-    df_sel_all_dates_2 = df_sel_all_dates_2.dropna()
-    
-    #### SETTING UP THE COLUMNS FOR THE VISUALIZATIONS ####################
-    col5, col6, col7 = st.columns(3)
-    
-    with col5:
-        get_time_graph_bbkswstr(df_sel_all_dates_2)
-        get_time_graph_hrfb(df_sel_all_dates_2)
-        # get_time_graph('wRC+', df_sel_all_dates_2, 100, 200)
-        # get_time_graph('ISO', df_sel_all_dates_2, .100, .400)
-        # get_time_graph('BABIP', df_sel_all_dates_2, .250, .500)
-        # get_time_graph('OPS', df_sel_all_dates_2, .700, 1.100)
 
-    with col6:
-        # get_time_graph('K%', df_sel_all_dates_2, .10, .40)
-        # get_time_graph('SwStr%', df_sel_all_dates_2, .05, .25)
-        # get_time_graph('BB%', df_sel_all_dates_2, .0, .250)
-        # #get_time_graph('SB', df_sel_all_dates_2, 0, 30)
-        get_time_graph_hrsb(df_sel_all_dates_2, 0, 15)
-        get_time_graph_quad(df_sel_all_dates_2)     
-        # fig, axes = plt.subplots(2,2)
-        # # just plot things on each individual axes
-        # x = df_sel_all_dates_2['PA']
-        # y1 = df_sel_all_dates_2['wRC+']
-        # y2 = df_sel_all_dates_2['ISO']
-        # y3 = df_sel_all_dates_2['BABIP']
-        # y4 = df_sel_all_dates_2['K%']
-        # # one plot on each subplot
-        # axes[0][0].scatter(x,y1)
-        # axes[0][0].plot(x,y1)
-        # axes[0][0].set_ylim([100, 200])
-        # axes[0][0].legend(['wRC+'])
-        # axes[0][1].scatter(x,y2)
-        # axes[0][1].plot(x,y2)
-        # axes[0][1].set_ylim([.100, .400])
-        # axes[0][1].legend(['ISO'])
-        # axes[1][0].scatter(x,y3)
-        # axes[1][0].plot(x,y3)
-        # axes[1][0].set_ylim([.100, .400])
-        # axes[1][0].legend(['BABIP'])
-        # axes[1][1].scatter(x,y4)
-        # axes[1][1].plot(x,y4)
-        # axes[1][1].legend(['K%'])
-        # axes[1][1].set_ylim([.100, .400])
-        # st.write(fig)
-
-    with col7:
-        get_time_graph_fbldgb(df_sel_all_dates_2)
-        # get_time_graph('FB%', df_sel_all_dates_2, .2, .6)
-        # get_time_graph('LD%', df_sel_all_dates_2, .100, .400)
-        # get_time_graph('GB%', df_sel_all_dates_2, .200, .600)
-        get_time_graph_kbabip(df_sel_all_dates_2)
-
-    # frames = []
+        
+        #### SETTING UP THE METRICS ###################
+        met1, met2, met3, met4 = st.columns(4)
+        
+        ## METRICS COL 1 #########
+        babip_display = get_met_disp("BABIP")
+        #met_babip_disp = ((((df_sel['BABIP'].iloc[0] - df_sel_date_max_2['BABIP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+        babip_delta = get_sel_met_delta("BABIP")
+        met1.metric(
+            label = "BABIP", 
+            value = babip_display,
+            delta = babip_delta #met_babip_disp 
+            )
+        
+        #ops_display = get_met_disp("OPS")
+        #met_ops_disp = ((((df_sel['OPS'].iloc[0] - df_sel_date_max_2['OPS'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+        ops_delta = get_sel_met_delta("OPS")
+        met1.metric(
+            label = "OPS", 
+            value = df_sel['OPS'].iloc[0],
+            delta = ops_delta
+            )
+        
+        ld_display = get_pct_disp("LD%")
+        ld_delta = get_sel_pct_delta("LD%")
+        met1.metric(
+            label = "LD%", 
+            value = ld_display,
+            delta = ld_delta
+            #((df_sel['LD%'].iloc[0] - df_sel_date_max_2['LD%'].iloc[0])*100).round(1),
+            )   
+        
+        ## METRICS COL 2 #########
+        avg_display = get_met_disp("AVG")
+        #met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+        avg_delta = get_sel_met_delta("AVG")
+        met2.metric(
+            label = "AVG", 
+            value = avg_display,
+            delta = avg_delta
+            )
+        
+        k_display = get_pct_disp("K%")
+        k_delta = get_sel_pct_delta("K%")
+        met2.metric(
+            label = "K%", 
+            value = k_display,
+            delta = k_delta,
+            delta_color = "inverse"
+            )
+        
+        gb_display = get_pct_disp("GB%")
+        gb_delta = get_sel_pct_delta("GB%")
+        met2.metric(
+            label = "GB%", 
+            value = gb_display,
+            delta = gb_delta
+            )
             
-    # sel_id_5 = sel_id + '-' + date_5
-    # if (sel_id in df_date_5['IndexSplit2'].values):
-    #     df_sel_date_5 = df_date_5.loc[[sel_id_5]]
-    #     df_sel_date_5_split = get_df_diff(df_sel_date_max, df_sel_date_5)
-    #     df_sel_date_5_split = calc_split_stats(df_sel_date_5_split)
-    #     frames = [df_sel_date_5_split]
+        ## METRICS COL 3 #########
+        obp_display = get_met_disp("OBP")
+        obp_delta = get_sel_met_delta("OBP")    
+        met_obp_disp = ((((df_sel['OBP'].iloc[0] - df_sel_date_max_2['OBP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+        met3.metric(
+            label = "OBP", 
+            value = obp_display,
+            delta = obp_delta
+            )
         
-    # sel_id_10 = sel_id + '-' + date_10
-    # if (sel_id in df_date_10['IndexSplit2'].values):
-    #     df_sel_date_10 = df_date_10.loc[[sel_id_10]]
-    #     df_sel_date_10_split = get_df_diff(df_sel_date_max, df_sel_date_10)
-    #     df_sel_date_10_split = calc_split_stats(df_sel_date_10_split)
-    #     frames = [df_sel_date_5_split, df_sel_date_10_split]
+        bb_display = get_pct_disp("BB%")
+        bb_delta = get_sel_pct_delta("BB%")    
+        met3.metric(
+            label = "BB%", 
+            value = bb_display,
+            delta = bb_delta
+            )    
         
-    # sel_id_15 = sel_id + '-' + date_15
-    # if (sel_id in df_date_15['IndexSplit2'].values):
-    #     df_sel_date_15 = df_date_15.loc[[sel_id_15]]
-    #     df_sel_date_15_split = get_df_diff(df_sel_date_max, df_sel_date_15)
-    #     df_sel_date_15_split = calc_split_stats(df_sel_date_15_split)
-    #     frames = [df_sel_date_5_split, df_sel_date_10_split, df_sel_date_15_split]
-    
-    with st.expander("Show career MiLB stats (stints of at least 70 PA listed)"):
+        fb_display = get_pct_disp("FB%")
+        fb_delta = get_sel_pct_delta("FB%")    
+        met3.metric(
+            label = "FB%", 
+            value = fb_display,
+            delta = fb_delta
+        )
         
-        # if len(frames) > 0: 
-        #     result = pd.concat(frames)
-        #     st.dataframe(result)
-        # else: 
-        #     st.write('No recent data for this player')
-            
-        df_sel_hist = df_hist_recent[df_hist_recent['PlayerID'].str.contains(sel_pid)]
-        df_sel_hist = df_sel_hist.filter(cols_hist_display, axis=1)
-        df_sel_hist = df_sel_hist.sort_values(by=['Season', 'Level'],ascending=False)
-        #st.dataframe(df_sel_hist)
-                #######################################################################
-        #### --- THE FIRST DATA TABLE ----------------------------------- #####
-        # configure grid options for Ag-Grid table
-        gb_sel_hist = GridOptionsBuilder.from_dataframe(df_sel_hist)
-        gb_sel_hist.configure_pagination(enabled=True)
-        gb_sel_hist.configure_default_column(editable=True, groupable=True)
-        #.configure_selection(selection_mode='single', use_checkbox=True)
-        grid_ops_sel_hist = gb_sel_hist.build()
-        grid_table = AgGrid(df_sel_hist, gridOptions=grid_ops_sel_hist,
-                            #update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-                            height=220,
-                            allow_unsafe_jscode=True,
-                            enable_enterprise_modules=True,
-                            theme='blue')
-        #sel_row = grid_table["selected_rows"]
+        ## METRICS COL 4 #########
+        slg_display = get_met_disp("SLG")
+        slg_delta = get_sel_met_delta("SLG")    
+        met4.metric(
+            label = "SLG", 
+            value = slg_display,
+            delta = slg_delta
+            )
         
-    with st.expander("Show historical comps"):
-        st.caption('Work in progress, currently shows stints of >70 PA where a player had a higher ISO, K%, and BB% at the same age or younger (data 2006-2021)')
-        sel_iso = df_sel['ISO'].iloc[0]
-        sel_kpct = df_sel['K%'].iloc[0]
-        sel_bbpct = df_sel['BB%'].iloc[0]
-        sel_age = df_sel['Age'].iloc[0].astype(int)
-        sel_level = df_sel['Level'].iloc[0]
-        ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
-        ## THIS WORKS WITHOUT THE BUFFERS #####################################
-        #dfhist3 = dfhist2[(dfhist2['iso'] >= sel_iso) & (dfhist2['kpct'] <= sel_kpct) & (dfhist2['bbpct'] >= sel_bbpct)]
-        #either above code or below code depending on whether or not the buffers are working -_- #
+        iso_display = get_met_disp("ISO")
+        iso_delta = get_sel_met_delta("ISO")    
+        met4.metric(
+            label = "ISO", 
+            value = iso_display,
+            delta = iso_delta
+            )
+        
+        hrfb_display = get_pct_disp("HR/FB")
+        hrfb_delta = get_sel_pct_delta("HR/FB")    
+        met4.metric(
+            label = "HR/FB", 
+            value = hrfb_display,
+            delta = hrfb_delta
+            )
+        
+        df_sel_all_dates = df_raw[df_raw['PlayerID'].str.contains(sel_pid)]
+        df_sel_all_dates = df_sel_all_dates.sort_values(by=['G'],ascending=False)
+        df_sel_all_dates_2 = df_sel_all_dates.filter(cols_xyz, axis=1)
+        df_sel_all_dates_2 = df_sel_all_dates_2.reset_index()    
+        df_sel_all_dates_2 = df_sel_all_dates_2.dropna()
+        
+        #### SETTING UP THE COLUMNS FOR THE VISUALIZATIONS ####################
+        col5, col6, col7 = st.columns(3)
+        
+        with col5:
+            get_time_graph_bbkswstr(df_sel_all_dates_2)
+            get_time_graph_hrfb(df_sel_all_dates_2)
+            # get_time_graph('wRC+', df_sel_all_dates_2, 100, 200)
+            # get_time_graph('ISO', df_sel_all_dates_2, .100, .400)
+            # get_time_graph('BABIP', df_sel_all_dates_2, .250, .500)
+            # get_time_graph('OPS', df_sel_all_dates_2, .700, 1.100)
 
-        ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
-        ## WITH BUFFERS #######################################################
-        df_hist_2 = df_hist[
-            (df_hist['ISO'] >= sel_iso) &
-            (df_hist['K%'] <= sel_kpct) &
-            (df_hist['BB%'] >= sel_bbpct) &
-            (df_hist['Age'] <= sel_age)
-        ]
+        with col6:
+            # get_time_graph('K%', df_sel_all_dates_2, .10, .40)
+            # get_time_graph('SwStr%', df_sel_all_dates_2, .05, .25)
+            # get_time_graph('BB%', df_sel_all_dates_2, .0, .250)
+            # #get_time_graph('SB', df_sel_all_dates_2, 0, 30)
+            get_time_graph_hrsb(df_sel_all_dates_2, 0, 15)
+            get_time_graph_quad(df_sel_all_dates_2)     
+            # fig, axes = plt.subplots(2,2)
+            # # just plot things on each individual axes
+            # x = df_sel_all_dates_2['PA']
+            # y1 = df_sel_all_dates_2['wRC+']
+            # y2 = df_sel_all_dates_2['ISO']
+            # y3 = df_sel_all_dates_2['BABIP']
+            # y4 = df_sel_all_dates_2['K%']
+            # # one plot on each subplot
+            # axes[0][0].scatter(x,y1)
+            # axes[0][0].plot(x,y1)
+            # axes[0][0].set_ylim([100, 200])
+            # axes[0][0].legend(['wRC+'])
+            # axes[0][1].scatter(x,y2)
+            # axes[0][1].plot(x,y2)
+            # axes[0][1].set_ylim([.100, .400])
+            # axes[0][1].legend(['ISO'])
+            # axes[1][0].scatter(x,y3)
+            # axes[1][0].plot(x,y3)
+            # axes[1][0].set_ylim([.100, .400])
+            # axes[1][0].legend(['BABIP'])
+            # axes[1][1].scatter(x,y4)
+            # axes[1][1].plot(x,y4)
+            # axes[1][1].legend(['K%'])
+            # axes[1][1].set_ylim([.100, .400])
+            # st.write(fig)
+
+        with col7:
+            get_time_graph_fbldgb(df_sel_all_dates_2)
+            # get_time_graph('FB%', df_sel_all_dates_2, .2, .6)
+            # get_time_graph('LD%', df_sel_all_dates_2, .100, .400)
+            # get_time_graph('GB%', df_sel_all_dates_2, .200, .600)
+            get_time_graph_kbabip(df_sel_all_dates_2)
+
+        # frames = []
                 
-        df_hist_2 = df_hist_2.sort_values(by='wRC+', ascending=False)
+        # sel_id_5 = sel_id + '-' + date_5
+        # if (sel_id in df_date_5['IndexSplit2'].values):
+        #     df_sel_date_5 = df_date_5.loc[[sel_id_5]]
+        #     df_sel_date_5_split = get_df_diff(df_sel_date_max, df_sel_date_5)
+        #     df_sel_date_5_split = calc_split_stats(df_sel_date_5_split)
+        #     frames = [df_sel_date_5_split]
+            
+        # sel_id_10 = sel_id + '-' + date_10
+        # if (sel_id in df_date_10['IndexSplit2'].values):
+        #     df_sel_date_10 = df_date_10.loc[[sel_id_10]]
+        #     df_sel_date_10_split = get_df_diff(df_sel_date_max, df_sel_date_10)
+        #     df_sel_date_10_split = calc_split_stats(df_sel_date_10_split)
+        #     frames = [df_sel_date_5_split, df_sel_date_10_split]
+            
+        # sel_id_15 = sel_id + '-' + date_15
+        # if (sel_id in df_date_15['IndexSplit2'].values):
+        #     df_sel_date_15 = df_date_15.loc[[sel_id_15]]
+        #     df_sel_date_15_split = get_df_diff(df_sel_date_max, df_sel_date_15)
+        #     df_sel_date_15_split = calc_split_stats(df_sel_date_15_split)
+        #     frames = [df_sel_date_5_split, df_sel_date_10_split, df_sel_date_15_split]
+        
+        with st.expander("Show career MiLB stats (stints of at least 70 PA listed)"):
+            
+            # if len(frames) > 0: 
+            #     result = pd.concat(frames)
+            #     st.dataframe(result)
+            # else: 
+            #     st.write('No recent data for this player')
+                
+            df_sel_hist = df_hist_recent[df_hist_recent['PlayerID'].str.contains(sel_pid)]
+            df_sel_hist = df_sel_hist.filter(cols_hist_display, axis=1)
+            df_sel_hist = df_sel_hist.sort_values(by=['Season', 'Level'],ascending=False)
+            #st.dataframe(df_sel_hist)
+                    #######################################################################
+            #### --- THE FIRST DATA TABLE ----------------------------------- #####
+            # configure grid options for Ag-Grid table
+            gb_sel_hist = GridOptionsBuilder.from_dataframe(df_sel_hist)
+            gb_sel_hist.configure_pagination(enabled=True)
+            gb_sel_hist.configure_default_column(editable=True, groupable=True)
+            #.configure_selection(selection_mode='single', use_checkbox=True)
+            grid_ops_sel_hist = gb_sel_hist.build()
+            grid_table = AgGrid(df_sel_hist, gridOptions=grid_ops_sel_hist,
+                                #update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
+                                height=220,
+                                allow_unsafe_jscode=True,
+                                enable_enterprise_modules=True,
+                                theme='blue')
+            #sel_row = grid_table["selected_rows"]
+            
+        with st.expander("Show historical comps"):
+            st.caption('Work in progress, currently shows stints of >70 PA where a player had a higher ISO, K%, and BB% at the same age or younger (data 2006-2021)')
+            sel_iso = df_sel['ISO'].iloc[0]
+            sel_kpct = df_sel['K%'].iloc[0]
+            sel_bbpct = df_sel['BB%'].iloc[0]
+            sel_age = df_sel['Age'].iloc[0].astype(int)
+            sel_level = df_sel['Level'].iloc[0]
+            ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
+            ## THIS WORKS WITHOUT THE BUFFERS #####################################
+            #dfhist3 = dfhist2[(dfhist2['iso'] >= sel_iso) & (dfhist2['kpct'] <= sel_kpct) & (dfhist2['bbpct'] >= sel_bbpct)]
+            #either above code or below code depending on whether or not the buffers are working -_- #
 
-        # CONFIGURE GRID OPTIONS ###############################################
-        gb_sel_comp = GridOptionsBuilder.from_dataframe(df_hist_2)
-        #gb_sel_comp.configure_pagination(enabled=True)
-        gb_sel_comp.configure_side_bar()
+            ## FILTER THE HISTORIC TABLE BASED ON THE SELECTED PLAYER #############
+            ## WITH BUFFERS #######################################################
+            df_hist_2 = df_hist[
+                (df_hist['ISO'] >= sel_iso) &
+                (df_hist['K%'] <= sel_kpct) &
+                (df_hist['BB%'] >= sel_bbpct) &
+                (df_hist['Age'] <= sel_age)
+            ]
+                    
+            df_hist_2 = df_hist_2.sort_values(by='wRC+', ascending=False)
 
-        gb_sel_comp.configure_default_column(min_column_width = .1, groupable=True, value=True, enableRowGroup=True, aggFunc="mean", editable=True)
-        grid_ops_sel_comp = gb_sel_comp.build()
+            # CONFIGURE GRID OPTIONS ###############################################
+            gb_sel_comp = GridOptionsBuilder.from_dataframe(df_hist_2)
+            #gb_sel_comp.configure_pagination(enabled=True)
+            gb_sel_comp.configure_side_bar()
 
-        AgGrid(
-            df_hist_2,
-            gridOptions=grid_ops_sel_comp,
-            height=530,
-            enable_enterprise_modules=True,
-            theme = "blue"
-        )
+            gb_sel_comp.configure_default_column(min_column_width = .1, groupable=True, value=True, enableRowGroup=True, aggFunc="mean", editable=True)
+            grid_ops_sel_comp = gb_sel_comp.build()
+
+            AgGrid(
+                df_hist_2,
+                gridOptions=grid_ops_sel_comp,
+                height=530,
+                enable_enterprise_modules=True,
+                theme = "blue"
+            )
