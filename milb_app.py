@@ -155,7 +155,7 @@ df_hist_recent = df_hist[df_hist['Season'] > 2014]
 levels = df_raw['Level'].unique()
 
 #st.caption('ALL DATA COURTESY OF FANGRAPHS')
-#st.dataframe(df_raw)
+st.dataframe(df_raw)
 
 ################################################################################################
 #### USER INPUT FOR DATES ######################################################################
