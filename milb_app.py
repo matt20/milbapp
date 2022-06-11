@@ -168,6 +168,8 @@ dates_choice_end = df_raw['Date'].unique()
 dates_choice_end = sorted(dates_choice_end, 
                           key=lambda date: datetime.strptime(date, '%Y-%m-%d'), reverse=True)
 
+dates_choice_jun1 = str('2022-06-01')
+
 days_back_choice = df_raw['DaysBack'].unique()
 days_back_choice = sorted(days_back_choice)
 
@@ -195,7 +197,8 @@ with st.expander("Show time splits parameters and search bar"):
     with col1:
         date_start = st.selectbox(
         'Choose a starting date',
-        (dates_choice_start))
+        (dates_choice_start),
+        index = 10)
         
         date_start_dt = datetime.strptime(date_start, '%Y-%m-%d') #string to date
 
@@ -566,7 +569,7 @@ if sel_row:
     # st.write(sel_fg_name)
     # st.write(sel_id)
     with st.expander('Show additional links'):
-        st.video('https://www.youtube.com/watch?v=GuA8iDNW49A')
+        #st.video('https://www.youtube.com/watch?v=GuA8iDNW49A')
         c1, c2, c3, c4 = st.columns(4)
         with c1:     
             fg_url = str('https://www.fangraphs.com/players/' + sel_fg_name + '/' + sel_id + '/stats?')
