@@ -29,22 +29,22 @@ with st.spinner('Loading data...'):
     df_hist = load_df_hist()
     df_hist['PlayerID'] = df_hist.index
     
-@st.cache(allow_output_mutation=True, ttl = ((60*60)*24))
-def load_df_raw():
-    URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
-    data2 = pd.read_csv(URL2, index_col = 'IndexNew')
-    return data2
+    @st.cache(allow_output_mutation=True, ttl = ((60*60)*24))
+    def load_df_raw():
+        URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
+        data2 = pd.read_csv(URL2, index_col = 'IndexNew')
+        return data2
 
-# @st.experimental_singleton
-# def reset_df_raw():
-#     URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
-#     data3 = pd.read_csv(URL2, index_col = 'IndexNew')
-#     return data3
+    # @st.experimental_singleton
+    # def reset_df_raw():
+    #     URL2 = 'https://github.com/matt20/milbapp/blob/master/dfraw.csv?raw=true'
+    #     data3 = pd.read_csv(URL2, index_col = 'IndexNew')
+    #     return data3
 
-df_raw = load_df_raw()
-df_raw['IndexSplit'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
-df_raw['IndexSplit2'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
-df_raw['Season'] = '2022'
+    df_raw = load_df_raw()
+    df_raw['IndexSplit'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
+    df_raw['IndexSplit2'] = df_raw.PlayerID.astype(str) + '-' + df_raw.Level + '-' + df_raw.Org
+    df_raw['Season'] = '2022'
 
 #######################################################################################################
 
@@ -187,6 +187,8 @@ date_15 = dates_choice_end[15]
 df_date_15 = get_df_filter(date_15)
 
 ## COLUMNS AND SEARCH ############################################################################
+st.caption('By default the table displayed will show the maximum range of available dates, use the drop downs to change the time window')
+st.caption('Use the search bar to find a specific player -- correct capitalization/spelling required, but you can search by First, Last, or First Last')
 with st.expander("Show time splits parameters and search bar"):
     col1, col2, col3 = st.columns((1,1,2))
 
@@ -392,13 +394,14 @@ else:
         gridoptions1 = gb1.build()
         grid_table = AgGrid(df_date_max_2, gridOptions=gridoptions1,
                             update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-                            height=685,
+                            height=590,
                             allow_unsafe_jscode=True,
                             enable_enterprise_modules=True,
                             theme='blue')
         sel_row = grid_table["selected_rows"]
     else:
-        st.caption('Select a player to pull up their profile or use the search feature to find a specific player by name')
+        st.caption('Select a player to pull up their profile underneath the table')
+        st.caption('Use the arrow buttons at the bottom right of the table to move between pages')
         st.write('Last ' + days_back_var + ' days')
         #######################################################################
         #### --- THE FIRST DATA TABLE ----------------------------------- #####
@@ -410,7 +413,7 @@ else:
         gridoptions2 = gb2.build()
         grid_table = AgGrid(df_splits_2, gridOptions=gridoptions2,
                             update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
-                            height=685,
+                            height=590,
                             allow_unsafe_jscode=True,
                             enable_enterprise_modules=True,
                             theme='blue')
@@ -550,12 +553,32 @@ def get_len_ind(df):
 #### SETTING UP THE SELECTION ###########################################
 if sel_row:
     df_sel = pd.DataFrame(sel_row)    
-    sel_id = df_sel.IndexSplit2[0]
-    sel_pid = df_sel.PlayerID[0]    
+    sel_indexsplit = df_sel.IndexSplit2[0]
+    sel_id = df_sel['IndexSplit2'][0].split('-')[0]
+    sel_pid = df_sel.PlayerID[0]
+    sel_fg_name = df_sel.Name[0].replace(' ', '-')
+    sel_pl_name = df_sel.Name[0].replace(' ', '+')
+    sel_twit_name = df_sel.Name[0].replace(' ', '%20')
     st.subheader("Selected player: " + df_sel['Name'].iloc[0] + ' - ' + df_sel['Org'].iloc[0])# + ' | Level: ' + df_sel['Level'].iloc[0])
-    sel_id_max = sel_id + '-' + date_max
-    df_sel_date_max = df_date_max.loc[[sel_id_max]]
+    sel_indexsplit_max = sel_indexsplit + '-' + date_max
+    df_sel_date_max = df_date_max.loc[[sel_indexsplit_max]]
     df_sel_date_max_2 = df_sel_date_max.filter(cols_xyz, axis=1)
+    # st.write(sel_fg_name)
+    # st.write(sel_id)
+    with st.expander('Show additional links'):
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:     
+            fg_url = str('https://www.fangraphs.com/players/' + sel_fg_name + '/' + sel_id + '/stats?')
+            st.write("[Link to FanGraphs player page]("+fg_url+")") 
+        with c2:
+            pl_url = str('https://www.prospectslive.com/prospects-live/tag/'+sel_pl_name)
+            st.write("[Link to Prospects Live player search]("+pl_url+")")
+        with c3:
+            twit_url = str('https://twitter.com/search?q=' + sel_twit_name + '&src=typed_query&f=live')
+            st.write("[Link to Twitter search]("+twit_url+")")
+        with c4:
+            yt_url = str('https://www.youtube.com/results?search_query=' + sel_pl_name + '+baseball')
+            st.write("[Link to YouTube search]("+yt_url+")")
     wrcplus_display = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int))
     #st.write(empty_df)
     empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
@@ -589,8 +612,8 @@ if sel_row:
         #           value = str('Season Total'),
         #           delta = str('Season Total - Season Total X days ago'))
 
-        sel_id_start = sel_id + '-' + date_start
-        df_sel_date_start = df_start.loc[[sel_id_start]]
+        sel_indexsplit_start = sel_indexsplit + '-' + date_start
+        df_sel_date_start = df_start.loc[[sel_indexsplit_start]]
         df_sel_date_start_2 = df_sel_date_start.filter(cols_xyz, axis=1)
         # st.dataframe(df_sel_date_start_2)
         # metrics = [
@@ -786,23 +809,23 @@ if sel_row:
 
         # frames = []
                 
-        # sel_id_5 = sel_id + '-' + date_5
-        # if (sel_id in df_date_5['IndexSplit2'].values):
-        #     df_sel_date_5 = df_date_5.loc[[sel_id_5]]
+        # sel_indexsplit_5 = sel_indexsplit + '-' + date_5
+        # if (sel_indexsplit in df_date_5['IndexSplit2'].values):
+        #     df_sel_date_5 = df_date_5.loc[[sel_indexsplit_5]]
         #     df_sel_date_5_split = get_df_diff(df_sel_date_max, df_sel_date_5)
         #     df_sel_date_5_split = calc_split_stats(df_sel_date_5_split)
         #     frames = [df_sel_date_5_split]
             
-        # sel_id_10 = sel_id + '-' + date_10
-        # if (sel_id in df_date_10['IndexSplit2'].values):
-        #     df_sel_date_10 = df_date_10.loc[[sel_id_10]]
+        # sel_indexsplit_10 = sel_indexsplit + '-' + date_10
+        # if (sel_indexsplit in df_date_10['IndexSplit2'].values):
+        #     df_sel_date_10 = df_date_10.loc[[sel_indexsplit_10]]
         #     df_sel_date_10_split = get_df_diff(df_sel_date_max, df_sel_date_10)
         #     df_sel_date_10_split = calc_split_stats(df_sel_date_10_split)
         #     frames = [df_sel_date_5_split, df_sel_date_10_split]
             
-        # sel_id_15 = sel_id + '-' + date_15
-        # if (sel_id in df_date_15['IndexSplit2'].values):
-        #     df_sel_date_15 = df_date_15.loc[[sel_id_15]]
+        # sel_indexsplit_15 = sel_indexsplit + '-' + date_15
+        # if (sel_indexsplit in df_date_15['IndexSplit2'].values):
+        #     df_sel_date_15 = df_date_15.loc[[sel_indexsplit_15]]
         #     df_sel_date_15_split = get_df_diff(df_sel_date_max, df_sel_date_15)
         #     df_sel_date_15_split = calc_split_stats(df_sel_date_15_split)
         #     frames = [df_sel_date_5_split, df_sel_date_10_split, df_sel_date_15_split]
