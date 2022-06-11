@@ -569,16 +569,16 @@ if sel_row:
         c1, c2, c3, c4 = st.columns(4)
         with c1:     
             fg_url = str('https://www.fangraphs.com/players/' + sel_fg_name + '/' + sel_id + '/stats?')
-            st.write("[Link to FanGraphs player page]("+fg_url+")") 
+            st.write("[FanGraphs player page]("+fg_url+")") 
         with c2:
             pl_url = str('https://www.prospectslive.com/prospects-live/tag/'+sel_pl_name)
-            st.write("[Link to Prospects Live player search]("+pl_url+")")
+            st.write("[Prospects Live player search]("+pl_url+")")
         with c3:
             twit_url = str('https://twitter.com/search?q=' + sel_twit_name + '&src=typed_query&f=live')
-            st.write("[Link to Twitter search]("+twit_url+")")
+            st.write("[Twitter search]("+twit_url+")")
         with c4:
             yt_url = str('https://www.youtube.com/results?search_query=' + sel_pl_name + '+baseball')
-            st.write("[Link to YouTube search]("+yt_url+")")
+            st.write("[YouTube search]("+yt_url+")")
     wrcplus_display = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int))
     #st.write(empty_df)
     empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
