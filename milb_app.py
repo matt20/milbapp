@@ -566,6 +566,7 @@ if sel_row:
     # st.write(sel_fg_name)
     # st.write(sel_id)
     with st.expander('Show additional links'):
+        st.video('https://www.youtube.com/watch?v=GuA8iDNW49A')
         c1, c2, c3, c4 = st.columns(4)
         with c1:     
             fg_url = str('https://www.fangraphs.com/players/' + sel_fg_name + '/' + sel_id + '/stats?')
