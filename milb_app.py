@@ -218,7 +218,7 @@ with st.expander("Show time splits parameters and search bar"):
     with col3:
         #### SEARCH FUNCTION ###################################################
         # with st.expander("Show search bar"):
-        search_input = st.text_input(label='Search for a player (hit enter then click submit search')
+        search_input = st.text_input(label='Search for a player (hit enter then click submit search)', help="Case-sensitive")
         search_submit = st.checkbox('Submit search')
 
 ################################################################################################
@@ -288,7 +288,7 @@ date_today_str = date_today.strftime('%Y-%m-%d')
 df_choice = ['Time Splits', 'Season Totals']
 input_df = st.sidebar.selectbox('Select data', df_choice, help='If you need more space for the table, click the X on the sidebar')
 input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
-input_pa_min = st.sidebar.slider('Min PA:', 1, splits_pa_max, 20)
+input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 15)
 input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
 input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
@@ -575,7 +575,7 @@ if sel_row:
             fg_url = str('https://www.fangraphs.com/players/' + sel_fg_name + '/' + sel_id + '/stats?')
             st.write("[FanGraphs player page]("+fg_url+")") 
         with c2:
-            pl_url = str('https://www.prospectslive.com/prospects-live/tag/'+sel_pl_name)
+            pl_url = str('https://www.prospectslive.com/plive-search/?q='+sel_pl_name)
             st.write("[Prospects Live player search]("+pl_url+")")
         with c3:
             twit_url = str('https://twitter.com/search?q=' + sel_twit_name + '&src=typed_query&f=live')
@@ -632,14 +632,17 @@ if sel_row:
         #     cols[row].metric(met)
 
         #colwrc1 = st.columns(1)
-
+        st.metric(label = 'PA',
+                    value = str((df_sel_date_max_2['PA'].iloc[0]).astype(int)),
+                    delta = (str((((df_sel_date_max_2['PA'].iloc[0]).astype(int) - (df_sel_date_start_2['PA'].iloc[0]).astype(int))))) + ' PA')
         #### SETTING UP THE METRICS ###################
         met1, met2, met3, met4 = st.columns(4)
         
         ## METRICS COL 1 #########
-        met1.metric(label = 'PA',
-                    value = str((df_sel_date_max_2['PA'].iloc[0]).astype(int)),
-                    delta = (str((((df_sel_date_max_2['PA'].iloc[0]).astype(int) - (df_sel_date_start_2['PA'].iloc[0]).astype(int))))) + ' PA')
+        met1.metric(label = 'wRC+',
+                    value = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int)),
+                    delta = (str((((df_sel_date_max_2['wRC+'].iloc[0]).astype(int) - (df_sel_date_start_2['wRC+'].iloc[0]).astype(int))))) + ' points')
+
         babip_display = get_met_disp("BABIP")
         #met_babip_disp = ((((df_sel['BABIP'].iloc[0] - df_sel_date_max_2['BABIP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
         babip_delta = get_sel_met_delta("BABIP")
@@ -668,18 +671,6 @@ if sel_row:
             )   
         
         ## METRICS COL 2 #########
-        met2.metric(label = 'wRC+',
-                    value = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int)),
-                    delta = (str((((df_sel_date_max_2['wRC+'].iloc[0]).astype(int) - (df_sel_date_start_2['wRC+'].iloc[0]).astype(int))))) + ' points')
-        avg_display = get_met_disp("AVG")
-        #met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
-        avg_delta = get_sel_met_delta("AVG")
-        met2.metric(
-            label = "AVG", 
-            value = avg_display,
-            delta = avg_delta
-            )
-        
         k_display = get_pct_disp("K%")
         k_delta = get_sel_pct_delta("K%")
         met2.metric(
@@ -688,6 +679,23 @@ if sel_row:
             delta = k_delta,
             delta_color = "inverse"
             )
+
+        avg_display = get_met_disp("AVG")
+        #met_avg_disp = ((((df_sel['AVG'].iloc[0] - df_sel_date_max_2['AVG'].iloc[0])*1000).astype(int)).astype(str) + ' points')
+        avg_delta = get_sel_met_delta("AVG")
+        met2.metric(
+            label = "AVG", 
+            value = avg_display,
+            delta = avg_delta
+            )
+
+        swstr_display = get_pct_disp("SwStr%")
+        swstr_delta = get_sel_pct_delta("SwStr%")
+        met2.metric(
+            label = "SwStr%", 
+            value = swstr_display,
+            delta = swstr_delta
+            )        
         
         gb_display = get_pct_disp("GB%")
         gb_delta = get_sel_pct_delta("GB%")
@@ -698,9 +706,14 @@ if sel_row:
             )
             
         ## METRICS COL 3 #########
-        met3.metric(label = 'SB',
-                    value = str((df_sel_date_max_2['SB'].iloc[0]).astype(int)),
-                    delta = (str((((df_sel_date_max_2['SB'].iloc[0]).astype(int) - (df_sel_date_start_2['SB'].iloc[0]).astype(int))))) + ' bags')
+        bb_display = get_pct_disp("BB%")
+        bb_delta = get_sel_pct_delta("BB%")    
+        met3.metric(
+            label = "BB%", 
+            value = bb_display,
+            delta = bb_delta
+            )          
+        
         obp_display = get_met_disp("OBP")
         obp_delta = get_sel_met_delta("OBP")    
         #met_obp_disp = ((((df_sel['OBP'].iloc[0] - df_sel_date_max_2['OBP'].iloc[0])*1000).astype(int)).astype(str) + ' points')
@@ -709,15 +722,11 @@ if sel_row:
             value = obp_display,
             delta = obp_delta
             )
-        
-        bb_display = get_pct_disp("BB%")
-        bb_delta = get_sel_pct_delta("BB%")    
-        met3.metric(
-            label = "BB%", 
-            value = bb_display,
-            delta = bb_delta
-            )    
-        
+
+        met3.metric(label = 'SB',
+            value = str((df_sel_date_max_2['SB'].iloc[0]).astype(int)),
+            delta = (str((((df_sel_date_max_2['SB'].iloc[0]).astype(int) - (df_sel_date_start_2['SB'].iloc[0]).astype(int))))) + ' SB')
+
         fb_display = get_pct_disp("FB%")
         fb_delta = get_sel_pct_delta("FB%")    
         met3.metric(
@@ -727,9 +736,14 @@ if sel_row:
         )
         
         ## METRICS COL 4 #########
-        met4.metric(label = 'HR',
-                    value = str((df_sel_date_max_2['HR'].iloc[0]).astype(int)),
-                    delta = (str((((df_sel_date_max_2['HR'].iloc[0]).astype(int) - (df_sel_date_start_2['HR'].iloc[0]).astype(int))))) + ' dingers')
+        iso_display = get_met_disp("ISO")
+        iso_delta = get_sel_met_delta("ISO")    
+        met4.metric(
+            label = "ISO", 
+            value = iso_display,
+            delta = iso_delta
+            )
+        
         slg_display = get_met_disp("SLG")
         slg_delta = get_sel_met_delta("SLG")    
         met4.metric(
@@ -738,13 +752,9 @@ if sel_row:
             delta = slg_delta
             )
         
-        iso_display = get_met_disp("ISO")
-        iso_delta = get_sel_met_delta("ISO")    
-        met4.metric(
-            label = "ISO", 
-            value = iso_display,
-            delta = iso_delta
-            )
+        met4.metric(label = 'HR',
+        value = str((df_sel_date_max_2['HR'].iloc[0]).astype(int)),
+        delta = (str((((df_sel_date_max_2['HR'].iloc[0]).astype(int) - (df_sel_date_start_2['HR'].iloc[0]).astype(int))))) + ' HR')
         
         hrfb_display = get_pct_disp("HR/FB")
         hrfb_delta = get_sel_pct_delta("HR/FB")    
