@@ -1,0 +1,8 @@
+pandas
+streamlit
+plotly
+streamlit_aggrid
+seaborn
+matplotlib
+streamlit_option_menu
+datetime
