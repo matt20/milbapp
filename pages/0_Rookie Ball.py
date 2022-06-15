@@ -154,7 +154,7 @@ df_hist_recent = df_hist[df_hist['Season'] > 2014]
 
 levels = df_raw['Level'].unique()
 
-#st.caption('ALL DATA COURTESY OF FANGRAPHS')
+st.caption('ALL DATA COURTESY OF FANGRAPHS')
 #st.dataframe(df_raw)
 
 ################################################################################################
@@ -189,7 +189,6 @@ date_15 = dates_choice_end[15]
 df_date_15 = get_df_filter(date_15)
 
 ## COLUMNS AND SEARCH ############################################################################
-st.caption('By default the table displayed will show the maximum range of available dates, use the drop downs to change the time window')
 st.caption('Use the search bar to find a specific player -- correct capitalization/spelling required, but you can search by First, Last, or First Last')
 with st.expander("Show time splits parameters and search bar"):
     col1, col2, col3 = st.columns((1,1,2))
@@ -198,7 +197,8 @@ with st.expander("Show time splits parameters and search bar"):
         date_start = st.selectbox(
         'Choose a starting date',
         (dates_choice_start),
-        index = 10)
+        index = 10,
+        help = 'Use the drop downs to change the time window')
         
         date_start_dt = datetime.strptime(date_start, '%Y-%m-%d') #string to date
 
@@ -388,6 +388,8 @@ else:
         df_date_max_2 = df_date_max.filter(cols_xyz, axis=1)
         df_date_max_2 = filter_by_input(df_date_max_2)
         df_date_max_2 = df_date_max_2[(df_date_max_2['wRC+'] >= input_wrcplus)]
+        df_date_max_2 = df_date_max_2.sort_values(by='wRC+', ascending=False)
+
         ######################################################################
         ### --- THE FIRST DATA TABLE ----------------------------------- #####
         #configure grid options for Ag-Grid table
@@ -695,7 +697,8 @@ if sel_row:
         met2.metric(
             label = "SwStr%", 
             value = swstr_display,
-            delta = swstr_delta
+            delta = swstr_delta,
+            delta_color = "inverse"
             )        
         
         gb_display = get_pct_disp("GB%")
