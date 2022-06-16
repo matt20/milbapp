@@ -1,4 +1,6 @@
 # milbapp
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/matt20/milbapp/MiLB_App_Home.py)
+
 Working through the process of creating a simple EDA app for Minor League Baseball (MiLB). 
 
 Problem statement: I was unable to find a resource which allowed me to filter MiLB statistics by date windows. There are options which
@@ -28,4 +30,4 @@ my goal to eventually build up my skills to the point where working with 100,000
 start building out the necessary database and Python scripts.
 
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/matt20/milbapp/MiLB_App_Home.py)
+
