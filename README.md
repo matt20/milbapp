@@ -26,3 +26,6 @@ Python, or the baseballR package in R, to download every single pitch thrown in 
 and issues that would certainly pop up while undertaking a project of that size, I decided to take some shortcuts to reach essentially the same endpoint. It is 
 my goal to eventually build up my skills to the point where working with 100,000+ new rows of 155 variables each week (!) is more approachable and then to 
 start building out the necessary database and Python scripts.
+
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/matt20/milbapp/MiLB_App_Home.py)
