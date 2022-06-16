@@ -5,7 +5,7 @@ Problem statement: I was unable to find a resource which allowed me to filter Mi
 allow you to track player performance over time, but none which allow you to see the stats for every player during that timeframe. This distinction 
 is crucial for the actual act of uncovering prospects as they are in the midst of skill development. For example, say there is a prospect who is doing
 everything right except he is striking out too much. This app will allow you to split the statistics by dates, allowing you to see if he has made any 
-improvements in the strikeout department. Player development is not linear, and often times a player's skills will see development over the course of the 
+improvements in the strikeout department over time. Player development is not linear, and often times a player's skills will see development over the course of the 
 season. Missing those developments will lead to you having an outdated opinion on a player's future value. My goal was to be able to identify players 
 as the skill development is happening. 
 
