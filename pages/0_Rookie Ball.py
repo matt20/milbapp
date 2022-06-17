@@ -80,8 +80,8 @@ cols_bio = [
 
 cols_split_display = [
     'Name','Org','Age','Level','PA',
-    'ISO','K%','BB%','OPS-BABIP',   
-    'OPS','BABIP','AVG','OBP','SLG','xSpect',
+    'ISO','K%','BB%',       
+    'OPS','OPS-BABIP','BABIP','AVG','OBP','SLG','xSpect',
     'HR','XBH','SB','CS','IndexSplit2','PlayerID'
 ]
 
