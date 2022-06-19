@@ -295,12 +295,12 @@ input_df = st.sidebar.selectbox('Select data', df_choice, help='If you need more
 input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
 input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 15)
 input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
-input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
+input_kpct = st.sidebar.slider('Max K%:', .0, .500, 1.0)
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
 input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 st.sidebar.caption('wRC+ for Season Totals only')
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
-input_levels = st.sidebar.multiselect('Levels',levels,levels)
+input_levels = st.sidebar.multiselect('Levels',levels,['A', 'A+'])
 # if st.sidebar.button("Check for updated data"):
 #     if date_today_str == date_max:
 #         st.success('Data up to date')
@@ -425,7 +425,7 @@ else:
                             update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
                             height=590,
                             allow_unsafe_jscode=True,
-                            enable_enterprise_modules=True,
+                            enable_enterprise_modules=False,
                             theme='blue')
         sel_row = grid_table["selected_rows"]
 
@@ -924,8 +924,8 @@ if sel_row:
 #st.caption('Created by Matt Pullman, '[FanGraphs player page]("+twit_url+")
 
 fghome_url = str('https://www.fangraphs.com/')
-st.write("All data courtesy of [FanGraphs]("+fghome_url+")")
+st.write("All data courtesy of [FanGraphs.com]("+fghome_url+")")
 
 twit_url = str('https://twitter.com/2outwalks')
-st.caption("Created by Matt Pullman - [@2outwalks]("+twit_url+")")#- If you experience any issues, or have any questions or feedback, please feel free to reach out on Twitter")
+st.caption("Created by Matt Pullman - [@2outwalks]("+twit_url+")")
 st.caption("If you experience any issues, or have any questions or feedback, please feel free to reach out on Twitter")

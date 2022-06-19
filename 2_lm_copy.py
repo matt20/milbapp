@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 
 #### SET UP THE ACTUAL PAGE ###########################################
 st.set_page_config(
-    page_title='Prospect',
-    page_icon="🎈", 
+    page_title='Prospect Tool',
+    page_icon="🎈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -155,7 +155,7 @@ df_hist_recent = df_hist[df_hist['Season'] > 2014]
 
 levels = df_raw['Level'].unique()
 
-#st.caption('ALL DATA COURTESY OF FANGRAPHS')
+st.caption('ALL DATA COURTESY OF FANGRAPHS')
 #st.dataframe(df_raw)
 
 ################################################################################################
@@ -175,10 +175,6 @@ days_back_choice = df_raw['DaysBack'].unique()
 days_back_choice = sorted(days_back_choice)
 
 date_max = dates_choice_end[0]
-date_max_dt = pd.to_datetime(date_max)
-#date_max_dt = datetime.strptime(date_max_dt, '%x')
-
-date_max_str = datetime.strftime(date_max_dt, '%x')
 df_date_max = get_df_filter(date_max)
 
 date_min = dates_choice_start[0]
@@ -295,12 +291,12 @@ input_df = st.sidebar.selectbox('Select data', df_choice, help='If you need more
 input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
 input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 15)
 input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
-input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
+input_kpct = st.sidebar.slider('Max K%:', .0, .500, 1.0)
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
 input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 st.sidebar.caption('wRC+ for Season Totals only')
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
-input_levels = st.sidebar.multiselect('Levels',levels,levels)
+input_levels = st.sidebar.multiselect('Levels',levels,['A', 'A+'])
 # if st.sidebar.button("Check for updated data"):
 #     if date_today_str == date_max:
 #         st.success('Data up to date')
@@ -412,7 +408,7 @@ else:
     else:
         st.caption('Select a player to pull up their profile underneath the table')
         st.caption('Use the arrow buttons at the bottom right of the table to move between pages')
-        st.write('Displaying stats from the last ' + days_back_var + ' days, updated through ' + date_max_str)
+        st.write('Last ' + days_back_var + ' days')
         #######################################################################
         #### --- THE FIRST DATA TABLE ----------------------------------- #####
         # configure grid options for Ag-Grid table
@@ -576,8 +572,8 @@ if sel_row:
     # st.write(sel_fg_name)
     # st.write(sel_id)
     with st.expander('Show additional links'):
-        #st.video('https://www.youtube.com/watch?v=yyLt_9HSDXk')
-        c1, c2, c3, c4, c5 = st.columns(5)
+        #st.video('https://www.youtube.com/watch?v=GuA8iDNW49A')
+        c1, c2, c3, c4 = st.columns(4)
         with c1:     
             fg_url = str('https://www.fangraphs.com/players/' + sel_fg_name + '/' + sel_id + '/stats?')
             st.write("[FanGraphs player page]("+fg_url+")") 
@@ -590,8 +586,6 @@ if sel_row:
         with c4:
             yt_url = str('https://www.youtube.com/results?search_query=' + sel_pl_name + '+baseball')
             st.write("[YouTube search]("+yt_url+")")
-        with c5:
-            goog_url = str()
     wrcplus_display = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int))
     #st.write(empty_df)
     empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
@@ -920,12 +914,3 @@ if sel_row:
                 enable_enterprise_modules=True,
                 theme = "blue"
             )
-            
-#st.caption('Created by Matt Pullman, '[FanGraphs player page]("+twit_url+")
-
-fghome_url = str('https://www.fangraphs.com/')
-st.write("All data courtesy of [FanGraphs]("+fghome_url+")")
-
-twit_url = str('https://twitter.com/2outwalks')
-st.caption("Created by Matt Pullman - [@2outwalks]("+twit_url+")")#- If you experience any issues, or have any questions or feedback, please feel free to reach out on Twitter")
-st.caption("If you experience any issues, or have any questions or feedback, please feel free to reach out on Twitter")

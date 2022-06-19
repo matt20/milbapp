@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 
 #### SET UP THE ACTUAL PAGE ###########################################
 st.set_page_config(
-    page_title='Prospect Tool', 
+    page_title='Prospect Tool',
+    page_icon="🎈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -287,15 +288,15 @@ date_today_str = date_today.strftime('%Y-%m-%d')
 #### SIDEBAR ###########################################################
 df_choice = ['Time Splits', 'Season Totals']
 input_df = st.sidebar.selectbox('Select data', df_choice, help='If you need more space for the table, click the X on the sidebar')
-input_age = st.sidebar.slider('Max Age:', 16, 32, 28)
-input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 15)
+input_age = st.sidebar.slider('Max Age:', 16, 32, 19)
+input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 10)
 input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
 input_kpct = st.sidebar.slider('Max K%:', .0, .500, 1.0)
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
 input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 st.sidebar.caption('wRC+ for Season Totals only')
-input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
-input_levels = st.sidebar.multiselect('Levels',levels,['AA', 'AAA'])
+input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 0)
+input_levels = st.sidebar.multiselect('Levels',levels, ['CPX', 'DSL'])
 # if st.sidebar.button("Check for updated data"):
 #     if date_today_str == date_max:
 #         st.success('Data up to date')
@@ -338,7 +339,6 @@ df_splits_2 = filter_by_input(df_splits_2)
 df_splits = df_splits.filter(cols_split_display, axis=1)
 df_splits_2 = df_splits_2.filter(cols_split_display, axis=1)
 df_splits_2 = df_splits_2.sort_values(by='OPS', ascending=False)
-
 # format_dict = {'K%': '{:.2%}', 'BB%': '{:.2%}'}
 # df_splits_2.style.format(format_dict)
 
@@ -390,6 +390,7 @@ else:
         df_date_max_2 = filter_by_input(df_date_max_2)
         df_date_max_2 = df_date_max_2[(df_date_max_2['wRC+'] >= input_wrcplus)]
         df_date_max_2 = df_date_max_2.sort_values(by='wRC+', ascending=False)
+
         ######################################################################
         ### --- THE FIRST DATA TABLE ----------------------------------- #####
         #configure grid options for Ag-Grid table
