@@ -596,7 +596,7 @@ if sel_row:
     #st.write(empty_df)
     empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
     if empty_df == True:
-        st.write('PlayerID not found in the stats as of the selected start date. Likely because they were promoted to MLB and their Player ID changed. A fix for this is in the works.')
+        st.write('PlayerID not found in the stats as of the selected start date. Likely because they had not debuted prior to the selected start date, or were promoted to MLB and their Player ID changed.')
         st.caption('Season Totals')
         met1, met2, met3, met4 = st.columns(4)
         met1.metric(label = 'PA', value = (df_sel_date_max_2['PA'].iloc[0]).astype(int), delta = None)
