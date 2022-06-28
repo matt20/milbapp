@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 #### SET UP THE ACTUAL PAGE ###########################################
 st.set_page_config(
-    page_title='Prospect',
+    page_title='Prospect Research Tool',
     page_icon="🎈", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -292,12 +292,51 @@ date_today_str = date_today.strftime('%Y-%m-%d')
 #### SIDEBAR ###########################################################
 df_choice = ['Time Splits', 'Season Totals']
 input_df = st.sidebar.selectbox('Select data', df_choice, help='If you need more space for the table, click the X on the sidebar')
-input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
-input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 15)
-input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
-input_kpct = st.sidebar.slider('Max K%:', .0, .500, 1.0)
+
+input_age = st.sidebar.slider(
+     'Age range:',
+     16, 32, (16, 23))
+
+age_min = input_age[0]
+age_max = input_age[1]
+
+# input_age = st.sidebar.slider('Max Age:', 16, 32, 24)
+
+input_pa = st.sidebar.slider(
+     'PA range:',
+     1, 500, (15, 150))
+
+input_pa_min = input_pa[0]
+input_pa_max = input_pa[1]
+
+
 input_iso = st.sidebar.slider('Min ISO:', .0, .500, .0)
-input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
+# input_pa_min = st.sidebar.slider('Min PA:', 1, 70, 15)
+# input_pa_max = st.sidebar.slider('Max PA:', 30, splits_pa_max, splits_pa_max)
+input_kpct = st.sidebar.slider(
+     'K% range:',
+     .0, .75, (.0, .40))
+
+input_kpct_min = input_kpct[0]
+input_kpct_max = input_kpct[1]
+
+#input_kpct = st.sidebar.slider('Max K%:', .0, .500, .500)
+
+# input_iso = st.sidebar.slider(
+#      'ISO range:',
+#      .0, .600, (.1, .6))
+
+# input_iso_min = input_iso[0]
+# input_iso_max = input_iso[1]
+
+input_bbpct = st.sidebar.slider(
+     'BB% range:',
+     .0, .75, (.0, .75))
+
+input_bbpct_min = input_bbpct[0]
+input_bbpct_max = input_bbpct[1]
+
+# input_bbpct = st.sidebar.slider('Min BB%:', .0, .25, .0)
 st.sidebar.caption('wRC+ for Season Totals only')
 input_wrcplus = st.sidebar.slider('Min wRC+:', 0, 200, 100)
 input_levels = st.sidebar.multiselect('Levels',levels,['A', 'A+'])
@@ -328,12 +367,15 @@ def calc_split_stats(df):
 
 def filter_by_input(df):
     return df[(df['ISO'] >= input_iso) &
-                        (df['K%'] <= input_kpct) &
-                        (df['BB%'] >= input_bbpct) &
-                        (df['Age'] <= input_age) &
-                        (df['PA'] >= input_pa_min) &
-                        (df['PA'] <= input_pa_max) &
-                        (df['Level'].isin(input_levels))
+                (df['K%'] <= input_kpct_max) &
+                (df['K%'] >= input_kpct_min) &
+                (df['BB%'] <= input_bbpct_max) &
+                (df['BB%'] >= input_bbpct_min) &
+                (df['Age'] <= age_max) &
+                (df['Age'] >= age_min) &
+                (df['PA'] >= input_pa_min) &
+                (df['PA'] <= input_pa_max) &
+                (df['Level'].isin(input_levels))
     ]
 
 df_splits_2 = calc_split_stats(df_splits)
@@ -425,7 +467,7 @@ else:
                             update_mode=GridUpdateMode.SELECTION_CHANGED | GridUpdateMode.VALUE_CHANGED,
                             height=590,
                             allow_unsafe_jscode=True,
-                            enable_enterprise_modules=False,
+                            enable_enterprise_modules=True,
                             theme='blue')
         sel_row = grid_table["selected_rows"]
 
@@ -566,6 +608,7 @@ if sel_row:
     sel_indexsplit = df_sel.IndexSplit2[0]
     sel_id = df_sel['IndexSplit2'][0].split('-')[0]
     sel_pid = df_sel.PlayerID[0]
+    sel_org = df_sel.Org[0]
     sel_fg_name = df_sel.Name[0].replace(' ', '-')
     sel_pl_name = df_sel.Name[0].replace(' ', '+')
     sel_twit_name = df_sel.Name[0].replace(' ', '%20')
@@ -585,13 +628,14 @@ if sel_row:
             pl_url = str('https://www.prospectslive.com/plive-search/?q='+sel_pl_name)
             st.write("[Prospects Live player search]("+pl_url+")")
         with c3:
-            twit_url = str('https://twitter.com/search?q=' + sel_twit_name + '&src=typed_query&f=live')
+            twit_url = str('https://twitter.com/search?q=' + sel_twit_name +'&src=typed_query&f=live')
             st.write("[Twitter search]("+twit_url+")")
         with c4:
             yt_url = str('https://www.youtube.com/results?search_query=' + sel_pl_name + '+baseball')
             st.write("[YouTube search]("+yt_url+")")
         with c5:
-            goog_url = str()
+            goog_url = str('https://www.google.com/search?q=' + sel_pl_name +'+'+ sel_org)
+            st.write("[Google search]("+goog_url+")")
     wrcplus_display = str((df_sel_date_max_2['wRC+'].iloc[0]).astype(int))
     #st.write(empty_df)
     empty_df = get_len_ind(df_start[df_start['PlayerID'].str.contains(sel_pid)])
@@ -904,6 +948,7 @@ if sel_row:
             ]
                     
             df_hist_2 = df_hist_2.sort_values(by='wRC+', ascending=False)
+            df_hist_2 = df_hist_2.iloc[:99]
 
             # CONFIGURE GRID OPTIONS ###############################################
             gb_sel_comp = GridOptionsBuilder.from_dataframe(df_hist_2)
@@ -924,8 +969,8 @@ if sel_row:
 #st.caption('Created by Matt Pullman, '[FanGraphs player page]("+twit_url+")
 
 fghome_url = str('https://www.fangraphs.com/')
-st.write("All data courtesy of [FanGraphs.com]("+fghome_url+")")
+st.write("All data courtesy of [FanGraphs]("+fghome_url+")")
 
 twit_url = str('https://twitter.com/2outwalks')
-st.caption("Created by Matt Pullman - [@2outwalks]("+twit_url+")")
+st.caption("Created by Matt Pullman - [@2outwalks]("+twit_url+")")#- If you experience any issues, or have any questions or feedback, please feel free to reach out on Twitter")
 st.caption("If you experience any issues, or have any questions or feedback, please feel free to reach out on Twitter")
