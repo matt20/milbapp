@@ -202,7 +202,7 @@ with st.expander("Show time splits parameters and search bar"):
         date_start = st.selectbox(
         'Choose a starting date',
         (dates_choice_start),
-        index = 10,
+        index = 28,
         help = 'Use the drop downs to change the time window')
         
         date_start_dt = datetime.strptime(date_start, '%Y-%m-%d') #string to date
@@ -278,7 +278,7 @@ df_splits = merge_with_bio(df_diff_input)
 
 df_splits.sort_values(by=['PA'])
 
-splits_pa_max = int(df_splits['PA'].max())
+# splits_pa_max = int(df_splits['PA'].max())
 
 #st.write(date_max)
 date_today = date.today()
